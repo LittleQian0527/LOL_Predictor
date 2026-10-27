@@ -18,10 +18,10 @@ export const adcPlayers = {
     id: 'guma', name: 'Gumayusi', team: 'T1', role: 'adc', games: 48,
     avatar: '', champions: [{ name: '韦鲁斯' }, { name: '女警' }],
     stats: { dpm: 650, dmgConv: '158', csd: 9.8, gpm: 445, kp: '65.2', kda: 4.8 }
-  },hope: {
+  }, hope: {
     id: 'hope', name: 'Hope', team: 'AL', role: 'adc', games: 4,
     avatar: '/images/players/adc/hope.png', champions: [
-    { name: '芸阿娜', icon: '/images/champions/Yunara.png' },
+      { name: '芸阿娜', icon: '/images/champions/Yunara.png' },
     ],
     scale: 1.0,
     stats: { dpm: 650, dmgConv: '158', csd: 9.8, gpm: 445, kp: '65.2', kda: 4.8 }

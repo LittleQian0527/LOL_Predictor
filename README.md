@@ -82,20 +82,20 @@ playersDb.js 将 5 个位置合并：
 js
 export const playersDb = { ...topPlayers, ...jugPlayers, ...midPlayers, ...adcPlayers, ...supPlayers }
 export const statDefsByRole = { top: topStatDefs, jug: jugStatDefs, mid: midStatDefs, adc: adcStatDefs, sup: supStatDefs }
-✅ 已完成进度
-1.全局 UI 框架：背景图、毛玻璃效果、顶部导航切换。
 
-2.赛事查询：多选赛区、单选赛事、日期过滤，卡片列表自适应。
-
-3.战队对比弹窗：点击卡片弹出，带队标、大比分、动态数据条。
-
-4.选手数据层：5 个位置独立拆分，含指标定义和选手数据。
-
-5.选手对比基础组件：VersusBoard 和 StatRow。
+✅ 已完成进度（更新于今日凌晨）
+1. 全局 UI 框架：背景图、毛玻璃效果、顶部导航切换。
+2. 赛事查询：多选赛区、单选赛事、日期过滤，卡片列表自适应。
+3. 战队对比弹窗：点击卡片弹出，带队标、大比分、动态数据条。
+4. 选手数据层：5 个位置独立拆分，含指标定义和选手数据。
+5. **全站智能滚动条**：基于 JS 捕获事件 + CSS `.is-scrolling` 类，实现“滚动出现，停止2秒后渐隐”。
+6. **英雄池自适应网格**：
+   - 常规模式 2 列，全屏模式强制 3 列。
+   - 彻底解决长名字溢出和 KDA 隐藏导致的排版错位。
+   - 使用 CSS Grid 实现“场次”死死钉在“英雄名”正下方。
+   - 锁死 `.board` 的 `max-height` 为 `85vh`，内部滚动，彻底解决撑破屏幕问题。
 
 🚀 待办事项 (To-Do)
 □ 补全 PlayerSelector.vue（目前仓库中缺失，用于下拉框选人）。
-□ 接入 html2canvas，一键导出对比图。
-□ 教练数据层：补充 coach.js 并统一到 playersDb。
 □ 比赛与选手联动：点比赛卡片直接看对位选手对比。
 □ 后端全栈化：爬虫自动更新数据、数据库存储。

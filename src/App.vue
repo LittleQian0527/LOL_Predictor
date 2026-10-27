@@ -15,13 +15,28 @@ const currentView = ref('match') // 'match' | 'compare' | 'coach' 🆕
 const currentFilters = ref({})
 const selectedMatch = ref(null) // 战队弹窗状态
 
-// 选手对比状态
-const playerA = ref(playersDb['theshy'])
-const playerB = ref(playersDb['zeus'])
+// ==========================================
+// 动态默认值：永远抓取表里的前两个，防白屏
+// ==========================================
 
-// 🆕 教练对比状态 (默认展示 Helper vs Homme)
-const coachA = ref(coachesDb['helper'])
-const coachB = ref(coachesDb['homme'])
+// 把对象转成数组
+const allPlayersArray = Object.values(playersDb || {})
+const allCoachesArray = Object.values(coachesDb || {})
+
+// 1. 选手默认值
+// 如果表里有2个及以上，就取前两个；如果只有1个，就左右都选他；如果是空表，就给个空对象防崩溃
+const defaultPlayerA = allPlayersArray.length > 0 ? allPlayersArray[0] : {}
+const defaultPlayerB = allPlayersArray.length > 1 ? allPlayersArray[1] : defaultPlayerA
+
+const playerA = ref(defaultPlayerA)
+const playerB = ref(defaultPlayerB)
+
+// 2. 教练默认值（同理）
+const defaultCoachA = allCoachesArray.length > 0 ? allCoachesArray[0] : {}
+const defaultCoachB = allCoachesArray.length > 1 ? allCoachesArray[1] : defaultCoachA
+
+const coachA = ref(defaultCoachA)
+const coachB = ref(defaultCoachB)
 
 // 快速对比输入框状态
 const quickA = ref('')
@@ -271,7 +286,14 @@ function handleCoachFullscreen() {
 
 <style>
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; }
+html, body {
+  margin: 0;
+  padding: 0;
+  /* 🆕 强制锁死屏幕高度，禁止全局滚动 */
+  height: 100vh; 
+  width: 100vw;
+  overflow: hidden; 
+}
 body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #e9ecf1; background-color: #040405; }
 
 .app-container {
@@ -287,6 +309,8 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
   background-position: center;  
   background-attachment: fixed; 
   background-repeat: no-repeat;
+  /* 🆕 防止内部画板撑爆整个容器 */
+  overflow: hidden; 
 }
 
 .bg-overlay {
@@ -388,5 +412,35 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
   padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 14px;
   z-index: 9999; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
   backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);
+}
+/* ================= 全站原生滚动条大净化 ================= */
+
+/* 1. 全站滚动条基础瘦身（轨道透明） */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 2. 滑块默认隐藏，且带有呼吸渐变动画 */
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 3. 核心魔法：只要带有 is-scrolling 类（JS 动态加的），无论哪个元素，滑块立刻亮起 */
+.is-scrolling::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+}
+.is-scrolling::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* 4. 防止横向滚动条把页面挤扁 */
+html, body {
+  scrollbar-gutter: stable;
 }
 </style>
