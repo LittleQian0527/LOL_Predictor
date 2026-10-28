@@ -151,7 +151,11 @@ const line1SizeClass = computed(() => {
 }
 .line-1 {
   background: linear-gradient(180deg, #ffffff 0%, #b0b8c8 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  /* 👇 这两行写在一起，警告就没了 */
+  -webkit-background-clip: text;
+  background-clip: text; 
+  
+  -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)) drop-shadow(0 5px 5px rgba(0,0,0,0.8));
 }
 .size-large { font-size: 7rem; }

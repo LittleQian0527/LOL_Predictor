@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue'
 // 🆕 1. 引入指标字典（请确保 teamsDb.js 里已经导出 teamStatDefs）
 import { teamsDb, teamStatDefs } from '../data/teamsDb' 
 import CoverGenerator from './CoverGenerator.vue' // 🆕 引入封面组件
+import FullscreenBackBtn from './FullscreenBackBtn.vue'
 
 // 🆕 封面控制状态
 const showCoverSetup = ref(false)
@@ -88,19 +89,22 @@ const formatValue = (val, key) => {
 <template>
   <div class="board" :class="{ 'board--fullscreen': isFullscreen }">
     
-    <div class="board__top">
+        <div class="board__top">
       <span>TEAM COMPARISON</span>
-      <div class="top-actions">
-        <!-- 🆕 生成封面按钮 -->
+      
+      <!-- 非全屏模式下：显示生成封面和全屏按钮 -->
+      <div class="top-actions" v-if="!isFullscreen">
         <button class="action-btn" @click="openCoverSetup" data-html2canvas-ignore="true">
           生成封面
         </button>
-        <!-- 原有的全屏按钮 -->
-        <button v-if="!isFullscreen" class="action-btn" @click="emit('openFullscreen', match)" data-html2canvas-ignore="true">
+        <button class="action-btn" @click="emit('openFullscreen', match)" data-html2canvas-ignore="true">
           全屏显示
         </button>
       </div>
-      <span v-if="isFullscreen">DATA</span>
+
+      <!-- 🆕 全屏模式下：直接调用刚才写好的返回按钮公共组件 -->
+      <FullscreenBackBtn v-else />
+      
     </div>
 
     <!-- 战队头部 -->
@@ -222,22 +226,21 @@ const formatValue = (val, key) => {
   transition: all 0.4s ease;
 }
 
-/* ================= 🆕 全屏新网页专属：适度放大，保持呼吸感 ================= */
+/* 全屏模式：占满整个屏幕 */
 .board.board--fullscreen {
-  /* 🆕 填满父容器（也就是刚好占屏幕 90vw * 90vh），不再写死 px 和 max-width */
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  min-height: auto;
-  
-  padding: 40px 60px;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0; /* 全屏不要圆角，铺满屏幕 */
+  border: none; /* 去掉边框，边缘不留缝隙 */
+  padding: 60px 80px; /* 内容居中，留出呼吸感 */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 22px;
 }
+
 /* 放大所有元素时的微调 */
 .board--fullscreen .logo-wrapper {
   width: 160px; /* 从 200px 降到 160px */

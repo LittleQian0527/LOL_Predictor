@@ -1,4 +1,6 @@
 <script setup>
+import FullscreenBackBtn from './FullscreenBackBtn.vue'
+
 const props = defineProps({
   coachA: { type: Object, required: true },
   coachB: { type: Object, required: true },
@@ -17,7 +19,7 @@ const emit = defineEmits(['openFullscreen'])
       <button v-if="!isFullscreen" class="action-btn" @click="emit('openFullscreen')">
         新页面全屏
       </button>
-      <span v-else>DATA</span>
+      <FullscreenBackBtn v-else />
     </div>
 
     <!-- ================= 教练头部信息区 ================= -->
@@ -130,21 +132,19 @@ const emit = defineEmits(['openFullscreen'])
   transition: all 0.4s ease;
 }
 
-/* 全屏模式 */
+/* 全屏模式：占满整个屏幕 */
 .board.board--fullscreen {
-  /* 🆕 填满父容器（也就是刚好占屏幕 90vw * 90vh），不再写死 px 和 max-width */
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  min-height: auto;
-  
-  padding: 40px 60px;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0; /* 全屏不要圆角，铺满屏幕 */
+  border: none; /* 去掉边框，边缘不留缝隙 */
+  padding: 60px 80px; /* 内容居中，留出呼吸感 */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 22px;
 }
 /* 顶部 */
 .board__top {

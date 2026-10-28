@@ -196,18 +196,12 @@ function handleCoachFullscreen() {
 </script>
 
 <template>
-    <!-- 1. 独立全屏网页模式 -->
+     <!-- 1. 独立全屏网页模式 -->
   <div v-if="isFullscreenMode" class="fullscreen-wrapper">
-    <!-- 🆕 加上背景图和遮罩层 -->
-    <div class="fullscreen-bg"></div>
-    <div class="bg-overlay"></div>
-    
-    <!-- 画板组件放在最上层 -->
-    <div class="fullscreen-content">
-      <TeamCompareBoard v-if="fullscreenMatch" :match="fullscreenMatch" :is-fullscreen="true" />
-      <VersusBoard v-if="fullscreenPlayerA && fullscreenPlayerB" :player-a="fullscreenPlayerA" :player-b="fullscreenPlayerB" :is-fullscreen="true" />
-      <CoachCompareBoard v-if="fullscreenCoachA && fullscreenCoachB" :coach-a="fullscreenCoachA" :coach-b="fullscreenCoachB" :is-fullscreen="true" />
-    </div>
+    <!-- 🆕 删除了背景图和遮罩，直接放画板 -->
+    <TeamCompareBoard v-if="fullscreenMatch" :match="fullscreenMatch" :is-fullscreen="true" />
+    <VersusBoard v-if="fullscreenPlayerA && fullscreenPlayerB" :player-a="fullscreenPlayerA" :player-b="fullscreenPlayerB" :is-fullscreen="true" />
+    <CoachCompareBoard v-if="fullscreenCoachA && fullscreenCoachB" :coach-a="fullscreenCoachA" :coach-b="fullscreenCoachB" :is-fullscreen="true" />
   </div>
 
   <div v-else class="app-container">
@@ -442,49 +436,17 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.3s ease; }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 
-/* 🆕 全屏状态的外层：把背景变成纯黑，然后给画板留出同样的边距 */
 .fullscreen-wrapper {
-  position: relative;
   width: 100vw; 
   height: 100vh; 
+  background: #040405; /* 纯黑底，录出来最干净 */
   display: flex; 
   justify-content: center; 
   align-items: center; 
   overflow: hidden;
-  padding: 5vh 5vw; 
-  background-color: #040405; /* 兜底纯黑 */
+  padding: 0; /* 去掉内边距，让画板彻底撑满 */
 }
 
-/* 🆕 全屏背景图（和主界面一样） */
-.fullscreen-bg {
-  position: absolute;
-  inset: 0;
-  background-image: url('/images/indexBG/worlds-2026.jpg'); 
-  background-size: cover;       
-  background-position: center;  
-  background-attachment: fixed; 
-  background-repeat: no-repeat;
-  z-index: 0;
-}
-
-/* 🆕 遮罩层（继承全局的 .bg-overlay，确保全屏也有变暗效果） */
-.fullscreen-wrapper .bg-overlay {
-  position: absolute; 
-  inset: 0;
-  background: linear-gradient(180deg, rgba(4, 4, 5, 0.65) 0%, rgba(4, 4, 5, 0.9) 100%);
-  z-index: 1;
-}
-
-/* 🆕 画板内容层，保证在背景和遮罩之上 */
-.fullscreen-content {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
