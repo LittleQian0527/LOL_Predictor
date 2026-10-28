@@ -2,6 +2,22 @@
 import { computed, ref, onMounted } from 'vue'
 // 🆕 1. 引入指标字典（请确保 teamsDb.js 里已经导出 teamStatDefs）
 import { teamsDb, teamStatDefs } from '../data/teamsDb' 
+import CoverGenerator from './CoverGenerator.vue' // 🆕 引入封面组件
+
+// 🆕 封面控制状态
+const showCoverSetup = ref(false)
+const coverTitle = ref('')
+const coverRatio = ref('16:9')
+const showCoverPreview = ref(false)
+
+function openCoverSetup() {
+  showCoverSetup.value = true
+}
+
+function generateCover() {
+  showCoverSetup.value = false
+  showCoverPreview.value = true
+}
 
 // 1. 接收数据
 const props = defineProps({
@@ -74,10 +90,17 @@ const formatValue = (val, key) => {
     
     <div class="board__top">
       <span>TEAM COMPARISON</span>
-      <button v-if="!isFullscreen" class="action-btn" @click="emit('openFullscreen', match)" data-html2canvas-ignore="true">
-        全屏显示
-      </button>
-      <span v-else></span>
+      <div class="top-actions">
+        <!-- 🆕 生成封面按钮 -->
+        <button class="action-btn" @click="openCoverSetup" data-html2canvas-ignore="true">
+          生成封面
+        </button>
+        <!-- 原有的全屏按钮 -->
+        <button v-if="!isFullscreen" class="action-btn" @click="emit('openFullscreen', match)" data-html2canvas-ignore="true">
+          全屏显示
+        </button>
+      </div>
+      <span v-if="isFullscreen">DATA</span>
     </div>
 
     <!-- 战队头部 -->
@@ -157,6 +180,32 @@ const formatValue = (val, key) => {
       </div>
     </section>
   </div>
+  <!-- 🆕 封面设置面板 -->
+  <div v-if="showCoverSetup" class="cover-setup-overlay" @click.self="showCoverSetup = false">
+    <div class="cover-setup-modal">
+      <h3>生成专属封面</h3>
+      <input v-model="coverTitle" placeholder="输入你的标题 (例如：宿命对决)" class="title-input" />
+      <div class="ratio-options">
+        <button :class="{ active: coverRatio === '16:9' }" @click="coverRatio = '16:9'">16:9 (横屏)</button>
+        <button :class="{ active: coverRatio === '4:3' }" @click="coverRatio = '4:3'">4:3 (标准)</button>
+        <button :class="{ active: coverRatio === '3:4' }" @click="coverRatio = '3:4'">3:4 (竖屏)</button>
+      </div>
+      <button class="generate-btn" @click="generateCover">一键生成</button>
+    </div>
+  </div>
+
+  <!-- 🆕 封面全屏预览 -->
+  <Teleport to="body">
+    <div v-if="showCoverPreview" class="cover-preview-overlay" @click.self="showCoverPreview = false">
+      <button class="close-preview" @click="showCoverPreview = false">×</button>
+      <CoverGenerator 
+        :teamA="teamStats.teamA" 
+        :teamB="teamStats.teamB" 
+        :title="coverTitle" 
+        :ratio="coverRatio" 
+      />
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -322,4 +371,47 @@ const formatValue = (val, key) => {
 .stat__bar--right { background: linear-gradient(90deg, #7a95bb, #3e5069); }
 
 .stat__label { text-align: center; font-size: 13px; font-weight: 600; color: #737c8e; }
+/* 🆕 顶部按钮组布局 */
+.top-actions { display: flex; gap: 10px; }
+
+/* 🆕 封面设置弹窗 */
+.cover-setup-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+  display: flex; justify-content: center; align-items: center; z-index: 10000;
+}
+.cover-setup-modal {
+  background: #121319; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+  padding: 30px; width: 420px; display: flex; flex-direction: column; gap: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+}
+.cover-setup-modal h3 { margin: 0; color: #fff; text-align: center; font-size: 20px; font-weight: 800; }
+.title-input {
+  padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px; color: #fff; font-size: 16px; outline: none; text-align: center;
+  font-family: inherit; transition: 0.2s;
+}
+.title-input:focus { border-color: #e23a4e; box-shadow: 0 0 10px rgba(226,58,78,0.3); }
+.ratio-options { display: flex; gap: 10px; }
+.ratio-options button {
+  flex: 1; padding: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: #e9ecf1; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 700; font-family: inherit;
+}
+.ratio-options button.active { background: rgba(226, 58, 78, 0.2); border-color: #e23a4e; color: #fff; }
+.generate-btn {
+  padding: 12px; background: #e23a4e; border: none; border-radius: 8px;
+  color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit;
+}
+.generate-btn:hover { background: #ff5567; box-shadow: 0 0 15px rgba(226,58,78,0.5); }
+
+/* 🆕 封面全屏预览层 (最高层级，屏蔽一切干扰) */
+.cover-preview-overlay {
+  position: fixed; inset: 0; background: #000;
+  display: flex; justify-content: center; align-items: center; z-index: 99999;
+}
+.close-preview {
+  position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 30px; width: 50px; height: 50px;
+  border-radius: 50%; cursor: pointer; z-index: 100000; display: flex; justify-content: center; align-items: center; transition: 0.2s;
+}
+.close-preview:hover { background: #e23a4e; }
 </style>
