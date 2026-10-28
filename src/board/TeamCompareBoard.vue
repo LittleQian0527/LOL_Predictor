@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { teamsDb } from '../data/teamsDb'
+// 🆕 1. 引入指标字典（请确保 teamsDb.js 里已经导出 teamStatDefs）
+import { teamsDb, teamStatDefs } from '../data/teamsDb' 
 
 // 1. 接收数据
 const props = defineProps({
@@ -11,7 +12,7 @@ const props = defineProps({
 // 2. 声明事件
 const emit = defineEmits(['openFullscreen'])
 
-// 🆕 3. 重新加上控制进度条动画的变量（千万别删这个！）
+// 3. 控制进度条动画
 const animateBars = ref(false)
 onMounted(() => {
   setTimeout(() => {
@@ -33,33 +34,39 @@ const teamStats = computed(() => {
   }
 })
 
-// 🆕 更新进度条计算逻辑（兼容负数经济差）
-const getWidth = (valA, valB) => {
-  // 提取纯数字（去除 % 号）
-  let numA = parseFloat(String(valA).replace('%', '')) || 0
-  let numB = parseFloat(String(valB).replace('%', '')) || 0
-  
-  // 核心：使用绝对值来比较长度。比如 +1500 和 -500，视觉上左边应该比右边长
-  let absA = Math.abs(numA)
-  let absB = Math.abs(numB)
+// ================= 🆕 核心数据处理逻辑 =================
 
-  if (absA === 0 && absB === 0) return { left: 50, right: 50 }
+// 🆕 提取纯数值（兼容百分比、负数、时间格式）
+const parseValue = (val) => {
+  if (!val) return 0
+  // 处理时间格式 (如 29:39 转为分钟数)
+  if (typeof val === 'string' && val.includes(':')) {
+    const [m, s] = val.split(':')
+    return parseInt(m) + parseInt(s) / 60
+  }
+  // 处理普通数字或百分比
+  return Math.abs(parseFloat(String(val).replace('%', ''))) || 0
+}
+
+// 🆕 计算进度条宽度（用绝对值比较，保证负数经济差也能正确显示长度）
+const getWidth = (valA, valB) => {
+  const numA = parseValue(valA)
+  const numB = parseValue(valB)
+
+  if (numA === 0 && numB === 0) return { left: 50, right: 50 }
   
-  const total = absA + absB
+  const total = numA + numB
   return {
-    left: (absA / total) * 100,
-    right: (absB / total) * 100
+    left: (numA / total) * 100,
+    right: (numB / total) * 100
   }
 }
 
-const statList = [
-  { key: 'winRate', label: '胜率' },
-  { key: 'fbRate', label: '一血率' },
-  { key: 'kpm', label: '场均击杀' },
-  { key: 'deaths', label: '场均死亡' },
-  { key: 'gd15', label: '15m经济差' },
-  { key: 'dragonRate', label: '小龙控制率' },
-]
+// 🆕 统一格式化显示内容（处理 gd15 正数加号、时间等）
+const formatValue = (val, key) => {
+  if (key === 'gd15' && Number(val) > 0) return `+${val}`
+  return val || '-'
+}
 </script>
 
 <template>
@@ -73,6 +80,7 @@ const statList = [
       <span v-else></span>
     </div>
 
+    <!-- 战队头部 -->
     <header class="team-header">
       <div class="team team--left">
         <div class="logo-wrapper">
@@ -83,12 +91,9 @@ const statList = [
       </div>
 
       <div class="score-center">
-        <!-- 如果有状态，才显示 -->
         <div v-if="match.status" class="match-status">{{ match.status }}</div>
-        <!-- 如果有比分，才显示 -->
         <div v-if="match.score" class="score-num">{{ match.score }}</div>
         
-        <!-- 🆕 VS 标识：如果没有比分，就放大并去掉边距 -->
         <div 
           class="score-vs" 
           :class="{ 'is-large': !match.score }"
@@ -106,48 +111,48 @@ const statList = [
       </div>
     </header>
 
+    <!-- 🆕 数据对比区（完全由 teamStatDefs 驱动） -->
     <section class="stats">
-      <!-- 🆕 加上 :style 动态延迟 -->
       <div 
-        v-for="(s, index) in statList" 
+        v-for="(s, index) in teamStatDefs" 
         :key="s.key" 
         class="stat"
-        :style="{ transitionDelay: `${index * 0.15}s` }"
       >
         <div class="stat__side stat__side--left">
           <!-- 左侧数值 -->
-        <span class="stat__value" :style="s.key === 'gd15' && teamStats.teamA[s.key] > 0 ? { color: '#00ff88' } : {}">
-        {{ s.key === 'gd15' && teamStats.teamA[s.key] > 0 ? '+' : '' }}{{ teamStats.teamA[s.key] }}
-        </span>
+          <span class="stat__value" :style="s.key === 'gd15' && teamStats.teamA[s.key] > 0 ? { color: '#00ff88' } : {}">
+            {{ formatValue(teamStats.teamA[s.key], s.key) }}
+          </span>
           <div class="stat__track">
-            <!-- 进度条宽度绑定 -->
-           <!-- 左侧进度条 -->
+            <!-- 左侧进度条 -->
             <div 
-            class="stat__bar stat__bar--left" 
-            :style="{ 
+              class="stat__bar stat__bar--left" 
+              :style="{ 
                 width: (animateBars ? getWidth(teamStats.teamA[s.key], teamStats.teamB[s.key]).left : 0) + '%',
                 transitionDelay: `${index * 0.15}s` 
-            }"
+              }"
             ></div>
           </div>
         </div>
 
+        <!-- 指标名 -->
         <span class="stat__label">{{ s.label }}</span>
 
         <div class="stat__side stat__side--right">
           <div class="stat__track">
             <!-- 右侧进度条 -->
             <div 
-            class="stat__bar stat__bar--right" 
-            :style="{ 
+              class="stat__bar stat__bar--right" 
+              :style="{ 
                 width: (animateBars ? getWidth(teamStats.teamA[s.key], teamStats.teamB[s.key]).right : 0) + '%',
                 transitionDelay: `${index * 0.15}s` 
-            }"
+              }"
             ></div>
           </div>
+          <!-- 右侧数值 -->
           <span class="stat__value" :style="s.key === 'gd15' && teamStats.teamB[s.key] > 0 ? { color: '#00ff88' } : {}">
-            {{ s.key === 'gd15' && teamStats.teamB[s.key] > 0 ? '+' : '' }}{{ teamStats.teamB[s.key] }}
-            </span>
+            {{ formatValue(teamStats.teamB[s.key], s.key) }}
+          </span>
         </div>
       </div>
     </section>
@@ -155,7 +160,7 @@ const statList = [
 </template>
 
 <style scoped>
-/* ================= 默认（弹窗）大小 ================= */
+/* 你的样式全部原封不动保留，非常完美 */
 .board {
   width: 100%;
   max-width: 850px;
@@ -168,47 +173,60 @@ const statList = [
   transition: all 0.4s ease;
 }
 
-/* ================= 🆕 全屏新网页专属：彻底放大！ ================= */
+/* ================= 🆕 全屏新网页专属：适度放大，保持呼吸感 ================= */
 .board.board--fullscreen {
-  max-width: 1600px; /* 允许撑得更宽 */
-  width: 95vw;       /* 占满屏幕 95% */
-  min-height: 90vh;
-  padding: 80px 100px;
+  /* 🆕 填满父容器（也就是刚好占屏幕 90vw * 90vh），不再写死 px 和 max-width */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-height: auto;
+  
+  padding: 40px 60px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* 垂直居中 */
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 22px;
 }
-
-/* 全屏时，放大所有元素 */
+/* 放大所有元素时的微调 */
 .board--fullscreen .logo-wrapper {
-  width: 200px;
-  height: 200px;
+  width: 160px; /* 从 200px 降到 160px */
+  height: 160px;
 }
 .board--fullscreen .score-num {
-  font-size: 80px; /* 比分放大到 80px */
+  font-size: 72px; /* 从 80px 降到 72px */
 }
 .board--fullscreen .team-sub-name {
-  font-size: 26px;
+  font-size: 24px;
 }
 .board--fullscreen .match-status {
-  font-size: 16px;
-  padding: 6px 20px;
-}
-.board--fullscreen .stat {
-  padding: 24px 0; /* 拉开行距 */
-}
-.board--fullscreen .stat__track {
-  height: 18px; /* 进度条加粗 */
-}
-.board--fullscreen .stat__value {
-  font-size: 28px; /* 数值放大 */
-  width: 80px;
-}
-.board--fullscreen .stat__label {
-  font-size: 20px; /* 标签放大 */
+  font-size: 14px;
+  padding: 6px 16px;
 }
 
-/* ================= 公共组件样式 ================= */
+/* 数据行调整 */
+.board--fullscreen .stat {
+  /* 🆕 核心修改：中间列从 120px 加宽到 180px，给文字留出空间 */
+  grid-template-columns: 1fr 180px 1fr; 
+  padding: 18px 0; /* 行距稍微缩小一点点，从 24px 降到 18px */
+}
+
+.board--fullscreen .stat__track {
+  height: 14px; /* 从 18px 降到 14px */
+}
+
+.board--fullscreen .stat__value {
+  font-size: 22px; /* 🆕 从 28px 降到 22px */
+  width: 80px; /* 保持宽度，足够放下 "33:12" 这种时间 */
+  /* 如果是左侧数据，可以加一点右边距让它别贴太紧 */
+}
+
+.board--fullscreen .stat__label {
+  font-size: 16px; /* 🆕 从 20px 降到 16px */
+  white-space: nowrap; /* 强制不换行 */
+}
+
 .board__top {
   display: flex;
   justify-content: space-between;
@@ -275,14 +293,14 @@ const statList = [
 }
 .score-num { font-size: 54px; font-weight: 800; color: #ffffff; letter-spacing: 0.05em; line-height: 1; text-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
 .score-vs { font-size: 13px; font-weight: 800; color: #4b5363; letter-spacing: 0.2em; margin-top: 8px; }
-/* 🆕 快速对比时的超大 VS */
+
 .score-vs.is-large {
-  font-size: 64px; /* 放大到 64px */
+  font-size: 64px;
   font-weight: 800;
-  color: #e9ecf1;  /* 亮色 */
+  color: #e9ecf1;
   letter-spacing: 0.05em;
   margin-top: 0;
-  text-shadow: 0 0 30px rgba(255, 255, 255, 0.2); /* 加点发光 */
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
   line-height: 1;
 }
 

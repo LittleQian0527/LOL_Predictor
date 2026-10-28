@@ -132,10 +132,20 @@ const emit = defineEmits(['openFullscreen'])
 
 /* 全屏模式 */
 .board.board--fullscreen {
-  max-width: 1400px; width: 95vw; min-height: 85vh;
-  padding: 60px 100px; display: flex; flex-direction: column; justify-content: center;
+  /* 🆕 填满父容器（也就是刚好占屏幕 90vw * 90vh），不再写死 px 和 max-width */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-height: auto;
+  
+  padding: 40px 60px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 22px;
 }
-
 /* 顶部 */
 .board__top {
   display: flex; justify-content: space-between; align-items: center;

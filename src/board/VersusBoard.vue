@@ -186,15 +186,32 @@ const getWidth = (valA, valB) => {
 
 /* 全屏适配 */
 .board.board--fullscreen {
-  max-width: 1500px;
-  width: 95vw;
-  min-height: 85vh;
-  padding: 40px 80px;
+  /* 🆕 填满父容器（也就是刚好占屏幕 90vw * 90vh），不再写死 px 和 max-width */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-height: auto;
+  
+  padding: 40px 60px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
+  border-radius: 22px;
 }
-.board--fullscreen.is-pool-mode { max-width: 1000px; }
+
+.board--fullscreen.is-pool-mode {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+/* 🆕 英雄池在全屏宽屏下，3列可能会太宽，建议改成 4 列 */
+.board--fullscreen .pool-grid {
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 16px;
+}
+/* 如果你还是喜欢3列，就把上面这段删掉，只保留宽度设定 */
 
 /* ================= 导航 ================= */
 .board__top {
@@ -396,11 +413,7 @@ const getWidth = (valA, valB) => {
   text-align: right;
 }
 
-/* ================= 🆕 全屏模式：3列 & 去掉KDA ================= */
-.board--fullscreen .pool-grid { 
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 12px;
-}
+
 .board--fullscreen .card-content {
   /* 全屏下只有3列，彻底释放空间 */
   grid-template-columns: 50px 1fr 42px; 

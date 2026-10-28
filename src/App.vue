@@ -1,78 +1,140 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted,onUnmounted,watch } from 'vue'
 import FilterArea from './board/FilterArea.vue'
 import MatchList from './board/MatchList.vue'
 import VersusBoard from './board/VersusBoard.vue'
 import TeamCompareBoard from './board/TeamCompareBoard.vue'
-import CoachCompareBoard from './board/CoachCompareBoard.vue' // 🆕 引入教练对比组件
+import CoachCompareBoard from './board/CoachCompareBoard.vue'
 
 import { playersDb } from './data/playersDb'
 import { teamsDb } from './data/teamsDb'
-import { coachesDb } from './data/coachesDb' // 🆕 引入教练数据表
+import { coachesDb } from './data/coachesDb'
 
 // ================= 状态管理 =================
-const currentView = ref('match') // 'match' | 'compare' | 'coach' 🆕
+const currentView = ref('match') // 'match' | 'compare' | 'coach'
 const currentFilters = ref({})
 const selectedMatch = ref(null) // 战队弹窗状态
-
-// ==========================================
-// 动态默认值：永远抓取表里的前两个，防白屏
-// ==========================================
-
-// 把对象转成数组
-const allPlayersArray = Object.values(playersDb || {})
-const allCoachesArray = Object.values(coachesDb || {})
-
-// 1. 选手默认值
-// 如果表里有2个及以上，就取前两个；如果只有1个，就左右都选他；如果是空表，就给个空对象防崩溃
-const defaultPlayerA = allPlayersArray.length > 0 ? allPlayersArray[0] : {}
-const defaultPlayerB = allPlayersArray.length > 1 ? allPlayersArray[1] : defaultPlayerA
-
-const playerA = ref(defaultPlayerA)
-const playerB = ref(defaultPlayerB)
-
-// 2. 教练默认值（同理）
-const defaultCoachA = allCoachesArray.length > 0 ? allCoachesArray[0] : {}
-const defaultCoachB = allCoachesArray.length > 1 ? allCoachesArray[1] : defaultCoachA
-
-const coachA = ref(defaultCoachA)
-const coachB = ref(defaultCoachB)
-
-// 快速对比输入框状态
-const quickA = ref('')
-const quickB = ref('')
-
-// 提示框状态
-const toastMessage = ref('')
-function showToast(msg) {
-  toastMessage.value = msg
-  setTimeout(() => { toastMessage.value = '' }, 2500)
+// 🆕 控制是否只显示纯背景
+const showBgOnly = ref(false)
+// 🆕 快捷键逻辑（B键隐藏UI，Esc退出）
+const handleKeydown = (e) => {
+  if (e.key.toLowerCase() === 'b') {
+    showBgOnly.value = true
+  } else if (e.key === 'Escape') {
+    showBgOnly.value = false
+  }
 }
 
-// 动态 Placeholder 逻辑（根据当前所在页面提示不同的输入格式）
-const placeholderA = computed(() => {
-  if (currentView.value === 'match') return '队伍A (如gen)'
-  if (currentView.value === 'compare') return '选手A (如theshy)'
-  return '教练A (如helper)'
-})
-const placeholderB = computed(() => {
-  if (currentView.value === 'match') return '队伍B (如t1)'
-  if (currentView.value === 'compare') return '选手B (如zeus)'
-  return '教练B (如homme)'
+// ==========================================
+// 🆕 下拉框与联动逻辑（分离选择状态与提交状态）
+// ==========================================
+
+// 1. 战队选择
+const teamAId = ref('')
+const teamBId = ref('')
+const teamList = computed(() => Object.values(teamsDb))
+const selectedTeamA = computed(() => teamsDb[teamAId.value] || null)
+const selectedTeamB = computed(() => teamsDb[teamBId.value] || null)
+
+// 2. 选手选择
+const roleList = [
+  { value: 'top', label: '上单' },
+  { value: 'jug', label: '打野' },
+  { value: 'mid', label: '中单' },
+  { value: 'adc', label: '射手' },
+  { value: 'sup', label: '辅助' },
+]
+const selectedRole = ref('top')
+const playerAId = ref('')
+const playerBId = ref('')
+
+// 🆕 真正用于渲染画板的确认状态
+const confirmedPlayerAId = ref('')
+const confirmedPlayerBId = ref('')
+
+const filteredPlayers = computed(() => {
+  return Object.values(playersDb).filter(p => p.role === selectedRole.value)
 })
 
-// ================= 生命周期与路由监听 =================
+// 当位置改变时，仅重置下拉框的选中项，不影响画板展示
+watch(selectedRole, () => {
+  const list = filteredPlayers.value
+  playerAId.value = list.length > 0 ? list[0].id : ''
+  playerBId.value = list.length > 1 ? list[1].id : playerAId.value
+}, { immediate: true })
+
+// 画板实际使用的数据（由确认状态决定）
+const playerA = computed(() => playersDb[confirmedPlayerAId.value] || {})
+const playerB = computed(() => playersDb[confirmedPlayerBId.value] || {})
+
+// 3. 教练选择 (树状分组)
+const coachAId = ref('')
+const coachBId = ref('')
+const confirmedCoachAId = ref('')
+const confirmedCoachBId = ref('')
+
+const groupedCoaches = computed(() => {
+  const groups = {}
+  Object.values(coachesDb).forEach(coach => {
+    const team = coach.team || '未知'
+    if (!groups[team]) groups[team] = []
+    groups[team].push(coach)
+  })
+  return groups
+})
+
+// 初始化默认下拉框教练
+const allCoaches = Object.values(coachesDb || {})
+coachAId.value = allCoaches.length > 0 ? allCoaches[0].id : ''
+coachBId.value = allCoaches.length > 1 ? allCoaches[1].id : coachAId.value
+
+// 画板实际使用的教练数据
+const coachA = computed(() => coachesDb[confirmedCoachAId.value] || {})
+const coachB = computed(() => coachesDb[confirmedCoachBId.value] || {})
+
+
+// ==========================================
+// 🆕 点击“生成对比”按钮的分发逻辑
+// ==========================================
+function handleGenerate() {
+  if (currentView.value === 'match') {
+    if (!selectedTeamA.value || !selectedTeamB.value) return
+    // 战队：直接弹出弹窗
+    selectedMatch.value = {
+      teamA: selectedTeamA.value,
+      teamB: selectedTeamB.value,
+      score: '',
+      status: ''
+    }
+  } else if (currentView.value === 'compare') {
+    if (!playerAId.value || !playerBId.value) return
+    // 选手：更新确认状态，画板渲染
+    confirmedPlayerAId.value = playerAId.value
+    confirmedPlayerBId.value = playerBId.value
+  } else if (currentView.value === 'coach') {
+    if (!coachAId.value || !coachBId.value) return
+    // 教练：更新确认状态，画板渲染
+    confirmedCoachAId.value = coachAId.value
+    confirmedCoachBId.value = coachBId.value
+  }
+}
+
+
+// ==========================================
+// 原有逻辑与全屏跳转
+// ==========================================
 const isFullscreenMode = ref(false)
 const fullscreenMatch = ref(null)
 const fullscreenPlayerA = ref(null)
 const fullscreenPlayerB = ref(null)
-const fullscreenCoachA = ref(null) // 🆕
-const fullscreenCoachB = ref(null) // 🆕
+const fullscreenCoachA = ref(null)
+const fullscreenCoachB = ref(null)
 
 onMounted(() => {
   const params = new URLSearchParams(window.location.search)
   const mode = params.get('mode')
-
+  
+  window.addEventListener('keydown', handleKeydown)
   if (mode === 'compare') {
     isFullscreenMode.value = true
     fullscreenMatch.value = {
@@ -89,153 +151,132 @@ onMounted(() => {
     fullscreenPlayerB.value = playersDb[params.get('playerB')]
   }
 
-  // 🆕 教练全屏模式
   if (mode === 'coach') {
     isFullscreenMode.value = true
     fullscreenCoachA.value = coachesDb[params.get('coachA')]
     fullscreenCoachB.value = coachesDb[params.get('coachB')]
   }
 })
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 
-function handleSearch(filters) {
-  currentFilters.value = filters
-}
-
-function handleSelectMatch(match) {
-  selectedMatch.value = match
-}
-
-function closeModal() {
-  selectedMatch.value = null
-}
-
-// 限制只能输入小写英文字母和数字
-const enforceLowercase = (e) => {
-  e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')
-}
-
-// ================= 快速对比逻辑 =================
-function handleQuickCompare() {
-  if (!quickA.value || !quickB.value) {
-    showToast('请输入两个英文缩写！')
-    return
-  }
-
-  const idA = quickA.value.toLowerCase()
-  const idB = quickB.value.toLowerCase()
-
-  // 1. 赛事查询页 -> 查战队
-  if (currentView.value === 'match') {
-    if (!teamsDb[idA]) return showToast(`查不到战队：${idA.toUpperCase()}`)
-    if (!teamsDb[idB]) return showToast(`查不到战队：${idB.toUpperCase()}`)
-    selectedMatch.value = {
-      teamA: { id: idA, name: idA.toUpperCase() },
-      teamB: { id: idB, name: idB.toUpperCase() },
-      score: '',
-      status: ''
-    }
-  } 
-  // 2. 选手对比页 -> 查选手
-  else if (currentView.value === 'compare') {
-    if (!playersDb[idA]) return showToast(`查不到选手：${idA}`)
-    if (!playersDb[idB]) return showToast(`查不到选手：${idB}`)
-    playerA.value = playersDb[idA]
-    playerB.value = playersDb[idB]
-    showToast(`已加载：${playerA.value.name} vs ${playerB.value.name}`)
-  } 
-  // 3. 🆕 教练对比页 -> 查教练
-  else if (currentView.value === 'coach') {
-    if (!coachesDb[idA]) return showToast(`查不到教练：${idA}`)
-    if (!coachesDb[idB]) return showToast(`查不到教练：${idB}`)
-    coachA.value = coachesDb[idA]
-    coachB.value = coachesDb[idB]
-    showToast(`已加载：${coachA.value.name} vs ${coachB.value.name}`)
-  }
-}
+function handleSearch(filters) { currentFilters.value = filters }
+function handleSelectMatch(match) { selectedMatch.value = match }
+function closeModal() { selectedMatch.value = null }
 
 // ================= 全屏跳转逻辑 =================
-// 1. 战队全屏跳转
 function handleOpenFullscreen(match) {
   const query = new URLSearchParams({
     mode: 'compare',
-    teamA: match.teamA.name,
-    teamB: match.teamB.name,
-    score: match.score || '',
-    status: match.status || '',
-    teamAId: match.teamA.id || '',
-    teamBId: match.teamB.id || ''
+    teamA: match.teamA.name, teamB: match.teamB.name,
+    score: match.score || '', status: match.status || '',
+    teamAId: match.teamA.id || '', teamBId: match.teamB.id || ''
   }).toString()
   window.open('/?' + query, '_blank') 
 }
 
-// 2. 选手全屏跳转
 function handlePlayerFullscreen() {
+  if (!playerA.value.id || !playerB.value.id) return
   const query = new URLSearchParams({
     mode: 'player',
-    playerA: playerA.value.id,
-    playerB: playerB.value.id
+    playerA: playerA.value.id, playerB: playerB.value.id
   }).toString()
   window.open('/?' + query, '_blank')
 }
 
-// 3. 🆕 教练全屏跳转
 function handleCoachFullscreen() {
+  if (!coachA.value.id || !coachB.value.id) return
   const query = new URLSearchParams({
     mode: 'coach',
-    coachA: coachA.value.id,
-    coachB: coachB.value.id
+    coachA: coachA.value.id, coachB: coachB.value.id
   }).toString()
   window.open('/?' + query, '_blank')
 }
 </script>
 
 <template>
-  <!-- 1. 独立全屏网页模式 -->
+    <!-- 1. 独立全屏网页模式 -->
   <div v-if="isFullscreenMode" class="fullscreen-wrapper">
-    <TeamCompareBoard v-if="fullscreenMatch" :match="fullscreenMatch" :is-fullscreen="true" />
-    <VersusBoard v-if="fullscreenPlayerA && fullscreenPlayerB" :player-a="fullscreenPlayerA" :player-b="fullscreenPlayerB" :is-fullscreen="true" />
-    <!-- 🆕 教练全屏 -->
-    <CoachCompareBoard v-if="fullscreenCoachA && fullscreenCoachB" :coach-a="fullscreenCoachA" :coach-b="fullscreenCoachB" :is-fullscreen="true" />
+    <!-- 🆕 加上背景图和遮罩层 -->
+    <div class="fullscreen-bg"></div>
+    <div class="bg-overlay"></div>
+    
+    <!-- 画板组件放在最上层 -->
+    <div class="fullscreen-content">
+      <TeamCompareBoard v-if="fullscreenMatch" :match="fullscreenMatch" :is-fullscreen="true" />
+      <VersusBoard v-if="fullscreenPlayerA && fullscreenPlayerB" :player-a="fullscreenPlayerA" :player-b="fullscreenPlayerB" :is-fullscreen="true" />
+      <CoachCompareBoard v-if="fullscreenCoachA && fullscreenCoachB" :coach-a="fullscreenCoachA" :coach-b="fullscreenCoachB" :is-fullscreen="true" />
+    </div>
   </div>
 
-  <!-- 2. 主界面 -->
   <div v-else class="app-container">
     <div class="bg-overlay"></div>
     
-    <div class="app-workspace">
+    <div class="app-workspace" v-show="!showBgOnly">
       
       <header class="app-nav">
         <div class="nav-brand">LOL <span>PREDICTOR</span></div>
         
-        <!-- 快速对比区域 -->
-        <div class="quick-compare">
-          <input 
-            type="text" 
-            v-model="quickA" 
-            @input="enforceLowercase" 
-            :placeholder="placeholderA" 
-            maxlength="12"
-          />
-          <button class="quick-btn" @click="handleQuickCompare">快速对比</button>
-          <input 
-            type="text" 
-            v-model="quickB" 
-            @input="enforceLowercase" 
-            :placeholder="placeholderB" 
-            maxlength="12"
-          />
+        <!-- 智能数据选择器 -->
+        <div class="smart-selectors">
+          <!-- 赛事查询页 -->
+          <template v-if="currentView === 'match'">
+            <select v-model="teamAId" class="custom-select small-select">
+              <option value="" disabled>选择战队 A</option>
+              <option v-for="t in teamList" :key="t.id" :value="t.id">{{ t.name }}</option>
+            </select>
+            <span class="vs-mini">VS</span>
+            <select v-model="teamBId" class="custom-select small-select">
+              <option value="" disabled>选择战队 B</option>
+              <option v-for="t in teamList" :key="t.id" :value="t.id">{{ t.name }}</option>
+            </select>
+            <!-- 按钮：生成战队对比 -->
+            <button class="quick-btn" @click="handleGenerate">生成对比</button>
+          </template>
 
-          <!-- 提示框 -->
-          <transition name="modal-fade">
-            <div v-if="toastMessage" class="toast-box">{{ toastMessage }}</div>
-          </transition>
+          <!-- 选手对比页 -->
+          <template v-else-if="currentView === 'compare'">
+            <select v-model="selectedRole" class="custom-select small-select" style="width: 100px;">
+              <option v-for="r in roleList" :key="r.value" :value="r.value">{{ r.label }}</option>
+            </select>
+            <select v-model="playerAId" class="custom-select small-select">
+              <option value="" disabled>选手 A</option>
+              <option v-for="p in filteredPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+            <span class="vs-mini">VS</span>
+            <select v-model="playerBId" class="custom-select small-select">
+              <option value="" disabled>选手 B</option>
+              <option v-for="p in filteredPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
+            <!-- 按钮：生成选手对比 -->
+            <button class="quick-btn" @click="handleGenerate">生成对比</button>
+          </template>
+
+          <!-- 教练对比页 -->
+          <template v-else-if="currentView === 'coach'">
+            <select v-model="coachAId" class="custom-select small-select">
+              <option value="" disabled>教练 A</option>
+              <optgroup v-for="(coaches, teamName) in groupedCoaches" :key="teamName" :label="teamName">
+                <option v-for="c in coaches" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </optgroup>
+            </select>
+            <span class="vs-mini">VS</span>
+            <select v-model="coachBId" class="custom-select small-select">
+              <option value="" disabled>教练 B</option>
+              <optgroup v-for="(coaches, teamName) in groupedCoaches" :key="teamName" :label="teamName">
+                <option v-for="c in coaches" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </optgroup>
+            </select>
+            <!-- 按钮：生成教练对比 -->
+            <button class="quick-btn" @click="handleGenerate">生成对比</button>
+          </template>
         </div>
 
         <!-- 导航栏 -->
         <div class="nav-menu">
           <button class="nav-btn" :class="{ 'is-active': currentView === 'match' }" @click="currentView = 'match'">赛事查询</button>
           <button class="nav-btn" :class="{ 'is-active': currentView === 'compare' }" @click="currentView = 'compare'">选手对比</button>
-          <!-- 🆕 教练对比 Tab -->
           <button class="nav-btn" :class="{ 'is-active': currentView === 'coach' }" @click="currentView = 'coach'">教练对比</button>
         </div>
       </header>
@@ -249,22 +290,34 @@ function handleCoachFullscreen() {
       <!-- 选手对比视图 -->
       <div v-if="currentView === 'compare'" class="app-view is-center">
         <div class="compare-wrapper">
+          <!-- 🆕 只有 confirmedPlayerAId 有值时才渲染 -->
           <VersusBoard 
+            v-if="confirmedPlayerAId && confirmedPlayerBId"
             :player-a="playerA" 
             :player-b="playerB" 
             @openFullscreen="handlePlayerFullscreen"
           />
+          <!-- 提示文案（未点击生成前显示） -->
+          <div v-else class="empty-tip">
+            请选择选手并点击“生成对比”
+          </div>
         </div>
       </div>
 
-      <!-- 🆕 教练对比视图 -->
+      <!-- 教练对比视图 -->
       <div v-if="currentView === 'coach'" class="app-view is-center">
         <div class="compare-wrapper">
+          <!-- 🆕 只有 confirmedCoachAId 有值时才渲染 -->
           <CoachCompareBoard 
+            v-if="confirmedCoachAId && confirmedCoachBId"
             :coach-a="coachA" 
             :coach-b="coachB" 
             @openFullscreen="handleCoachFullscreen"
           />
+          <!-- 提示文案（未点击生成前显示） -->
+          <div v-else class="empty-tip">
+            请选择教练并点击“生成对比”
+          </div>
         </div>
       </div>
     </div>
@@ -285,73 +338,54 @@ function handleCoachFullscreen() {
 </template>
 
 <style>
+/* ... (样式部分完全保留你原来的，只新增了 empty-tip 提示词样式) ... */
 *, *::before, *::after { box-sizing: border-box; }
-html, body {
-  margin: 0;
-  padding: 0;
-  /* 🆕 强制锁死屏幕高度，禁止全局滚动 */
-  height: 100vh; 
-  width: 100vw;
-  overflow: hidden; 
-}
+html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; }
 body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #e9ecf1; background-color: #040405; }
 
 .app-container {
   position: relative;
-  min-height: 100vh;
+  /* 🆕 将 min-height 改为 height 100vh，防止被撑开 */
+  height: 100vh; 
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 20px;
-  /* 使用你要求的专属背景图路径 */
   background-image: url('/images/indexBG/worlds-2026.jpg'); 
   background-size: cover;       
   background-position: center;  
   background-attachment: fixed; 
   background-repeat: no-repeat;
-  /* 🆕 防止内部画板撑爆整个容器 */
   overflow: hidden; 
 }
 
-.bg-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(4, 4, 5, 0.65) 0%, rgba(4, 4, 5, 0.9) 100%);
-  z-index: 1;
-}
+.bg-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4, 4, 5, 0.65) 0%, rgba(4, 4, 5, 0.9) 100%); z-index: 1; }
 
 .app-workspace {
   position: relative; z-index: 2; 
-  width: 100%; max-width: 1600px; height: 90vh;
+  /* 🆕 统一使用 90vw 和 90vh，完美自适应任何屏幕 */
+  width: 90vw; 
+  height: 90vh; 
+  max-width: 1800px; /* 限制一下超宽屏 */
+  max-height: 1000px;
   display: flex; flex-direction: column;
   background: rgba(18, 19, 25, 0.75); 
   backdrop-filter: blur(12px); 
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 22px; overflow: hidden;
   box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
 }
 
-/* 导航栏 */
 .app-nav {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr; /* 左边占1份，中间自适应，右边占1份 */
-  align-items: center;
-  padding: 0 40px; 
-  height: 64px; 
-  flex-shrink: 0;
-  background: rgba(10, 11, 14, 0.6); 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding: 0 40px; height: 64px; flex-shrink: 0;
+  background: rgba(10, 11, 14, 0.6); border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
-/* 左侧 Logo 自然靠左 */
-.nav-brand { 
-  font-size: 18px; font-weight: 800; color: #f3f5f9; letter-spacing: 0.1em; 
-  justify-self: start;
-}
+.nav-brand { font-size: 18px; font-weight: 800; color: #f3f5f9; letter-spacing: 0.1em; justify-self: start; }
 .nav-brand span { color: #b31b2c; }
-/* 右侧菜单强制靠右 */
-.nav-menu { 
-  display: flex; gap: 10px; height: 100%; 
-  justify-self: end; /* 🆕 强制贴右边 */
-}
+.nav-menu { display: flex; gap: 10px; height: 100%; justify-self: end; }
 .nav-btn {
   background: none; border: none; border-bottom: 2px solid transparent;
   color: #6e7688; font-family: inherit; font-size: 14px; font-weight: 600;
@@ -360,33 +394,40 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 .nav-btn:hover { color: #e9ecf1; }
 .nav-btn.is-active { color: #e23a4e; border-bottom-color: #e23a4e; }
 
-/* 中间的搜索框自动居中 */
-.quick-compare { 
-  display: flex; align-items: center; gap: 12px; position: relative; 
-  justify-self: center; /* 🆕 强制居中 */
+.smart-selectors { display: flex; align-items: center; gap: 8px; justify-self: center; }
+
+.custom-select {
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff; border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 600; 
+  outline: none; cursor: pointer; transition: all 0.2s; color-scheme: dark; 
 }
-.quick-compare input {
-  width: 140px; background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
-  padding: 6px 10px; border-radius: 6px; font-family: inherit;
-  font-size: 13px; font-weight: 600; outline: none; text-align: center; transition: all 0.2s;
-}
-.quick-compare input:focus {
+.custom-select:focus, .custom-select:hover {
   border-color: #b31b2c; background: rgba(179, 27, 44, 0.1); box-shadow: 0 0 10px rgba(179, 27, 44, 0.3);
 }
-.quick-compare input::placeholder { color: #4b5363; font-size: 11px; font-weight: 400; }
+.small-select { padding: 6px 10px; width: 110px; text-align: center; }
+.small-select optgroup { background-color: #090a0d; color: #8a93a6; font-weight: 800; font-size: 11px; }
+.small-select option { background-color: #121319; color: #e9ecf1; font-size: 13px; padding: 8px; }
+
+.vs-mini { font-size: 14px; font-weight: 900; color: #e23a4e; font-style: italic; margin: 0 4px; }
+
+/* 新增的生成按钮样式 */
 .quick-btn {
   background: #b31b2c; border: none; color: #fff; padding: 6px 16px;
   border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s;
+  margin-left: 8px;
 }
 .quick-btn:hover { background: #e23a4e; box-shadow: 0 0 15px rgba(226, 58, 78, 0.5); }
 
-/* 视图容器 */
+/* 空状态提示词 */
+.empty-tip {
+  color: #4b5363; font-size: 16px; font-weight: 600; padding: 60px 0;
+  letter-spacing: 0.1em; animation: fadeIn 0.4s ease;
+}
+
 .app-view { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .app-view.is-center { align-items: center; justify-content: center; overflow-y: auto; padding: 40px; }
-.compare-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; }
+.compare-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; min-height: 400px; }
 
-/* 弹窗与全屏 */
 .modal-wrapper {
   position: fixed; inset: 0; z-index: 999; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
   display: flex; justify-content: center; align-items: center; padding: 40px;
@@ -401,46 +442,74 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.3s ease; }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 
+/* 🆕 全屏状态的外层：把背景变成纯黑，然后给画板留出同样的边距 */
 .fullscreen-wrapper {
-  width: 100vw; height: 100vh; background: #090a0d; display: flex; justify-content: center; align-items: center; overflow: hidden;
+  position: relative;
+  width: 100vw; 
+  height: 100vh; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  overflow: hidden;
+  padding: 5vh 5vw; 
+  background-color: #040405; /* 兜底纯黑 */
 }
 
-/* 提示框 */
-.toast-box {
-  position: absolute; top: calc(100% + 15px); left: 50%; transform: translateX(-50%);
-  white-space: nowrap; background: rgba(226, 58, 78, 0.95); color: #fff;
-  padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 14px;
-  z-index: 9999; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-  backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);
-}
-/* ================= 全站原生滚动条大净化 ================= */
-
-/* 1. 全站滚动条基础瘦身（轨道透明） */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
+/* 🆕 全屏背景图（和主界面一样） */
+.fullscreen-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/indexBG/worlds-2026.jpg'); 
+  background-size: cover;       
+  background-position: center;  
+  background-attachment: fixed; 
+  background-repeat: no-repeat;
+  z-index: 0;
 }
 
-/* 2. 滑块默认隐藏，且带有呼吸渐变动画 */
-::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 3px;
-  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+/* 🆕 遮罩层（继承全局的 .bg-overlay，确保全屏也有变暗效果） */
+.fullscreen-wrapper .bg-overlay {
+  position: absolute; 
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4, 4, 5, 0.65) 0%, rgba(4, 4, 5, 0.9) 100%);
+  z-index: 1;
 }
 
-/* 3. 核心魔法：只要带有 is-scrolling 类（JS 动态加的），无论哪个元素，滑块立刻亮起 */
-.is-scrolling::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
-}
-.is-scrolling::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+/* 🆕 画板内容层，保证在背景和遮罩之上 */
+.fullscreen-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* 4. 防止横向滚动条把页面挤扁 */
-html, body {
-  scrollbar-gutter: stable;
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.is-scrolling::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); }
+.is-scrolling::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+html, body { scrollbar-gutter: stable; }
+
+/* 🆕 纯背景模式提示词 */
+.bg-tip {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 9999;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
