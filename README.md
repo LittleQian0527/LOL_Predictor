@@ -83,6 +83,14 @@ js
 export const playersDb = { ...topPlayers, ...jugPlayers, ...midPlayers, ...adcPlayers, ...supPlayers }
 export const statDefsByRole = { top: topStatDefs, jug: jugStatDefs, mid: midStatDefs, adc: adcStatDefs, sup: supStatDefs }
 
+## 📏 开发规范 (极其重要，AI 必须遵守)
+
+1. **DRY 原则（拒绝重复）**：**任何功能逻辑、CSS 样式、甚至 UI 小组件，只要在项目中被复用 2 次及以上，必须抽离为全局公共组件或全局样式（如 `App.vue` 中的无 scoped 样式，或 `src/components/` 下的公共组件）。**
+   - *示例*：全屏返回按钮已抽离为 `FullscreenBackBtn.vue`。
+   - *示例*：全站通用的银白金属质感 VS 样式已抽离为 `.universal-vs` 类。
+2. **全站风格统一**：新增画板或页面时，必须优先使用全局已封装好的样式类（如 `.universal-vs`），禁止重复编写类似样式的冗余代码。
+3. **数据驱动 UI**：所有对比图表、数据条，必须由 `src/data/` 下的指标字典（如 `teamStatDefs`）驱动渲染，严禁在 Vue 模板中写死数据字段。
+
 ✅ 已完成进度（更新于今日凌晨）
 1. 全局 UI 框架：背景图、毛玻璃效果、顶部导航切换。
 2. 赛事查询：多选赛区、单选赛事、日期过滤，卡片列表自适应。
@@ -101,6 +109,12 @@ export const statDefsByRole = { top: topStatDefs, jug: jugStatDefs, mid: midStat
 4. **全屏/录制适配**：所有画板（战队/选手/教练/英雄池）的全屏尺寸已统一为 `90vw * 90vh`，防止录屏画面跳动；主界面新增按 `B` 键隐藏 UI（纯背景模式），按 `Esc` 恢复。
 5. **封面生成器 (CoverGenerator)**：新增独立封面生成组件，支持输入自定义标题（使用 `;` 换行），支持 16:9、4:3、3:4 三种自适应比例。
 6. **组件化抽离**：将全屏模式下的“返回主界面”悬浮按钮抽离为公共组件 `FullscreenBackBtn.vue`，实现所有画板点击复用，保持交互一致。
+
+## ✅ 最新进度更新 (3.0)
+1. **组件化抽离**：将全屏“返回按钮”抽离为 `FullscreenBackBtn.vue`；将 VS 样式抽离为全局 `.universal-vs`（银白金属渐变），实现全站风格绝对统一，大幅精简冗余代码。
+2. **全屏排版大满贯**：重构 `TeamCompareBoard`、`VersusBoard`、`CoachCompareBoard` 的全屏 CSS。采用 Flex/Grid 均分空间，放大所有字体、头像与条形图，彻底告别海景房留白。
+3. **英雄池自适应**：修复全屏下英雄池卡片过小的问题，实现上下垂直居中。
+4. **布局细节修正**：教练对比页的“数据来源”在全屏模式下完美移至右上角，避开右下角挤压。
 
 ## 🚀 待办事项 (To-Do)
 - [ ] 接入 html2canvas，实现一键下载静态对比图。

@@ -94,5 +94,44 @@ export const coachesDb = {
       { year: 2023, result: '15-16名' },
       { year: 2024, result: '9-11名' }
     ]
+  },
+  daeny: {
+    id: 'daeny',
+    name: 'Daeny',
+    team: 'BLG',
+    avatar: '/images/coaches/daeny.png',
+    scale: 1.0,
+    careerTeams: ['DWG', 'T1', 'DK', 'WBG', 'IG', 'BLG'],
+    worldsCount: 4,
+    worldsRole: '主教练',
+    worldsHistory: [
+      { year: 'S10', result: '冠军' },
+      { year: 'S13', result: '亚军' },
+      { year: 'S14', result: '四强' },
+      { year: 'S15', result: '17名' },
+    ],
+    trophies: [
+      '2020 全球总决赛冠军',
+      '2026 全球先锋赛冠军',
+      '2026 LPL 第一赛段冠军',
+      '2026 LPL 第二赛段冠军'
+    ]
+  },
+  poppy: {
+    id: 'poppy',
+    name: 'Poppy',
+    team: 'TES',
+    avatar: '/images/coaches/poppy.png',
+    scale: 1.0,
+    careerTeams: ['RNG', 'LNG', 'EDG', 'TES'],
+    worldsCount: 2,
+    worldsRole: '主教练',
+    worldsHistory: [
+      { year: 'S13', result: '八强' },
+      { year: 'S15', result: '四强' }
+    ],
+    trophies: [
+      '2021 MSI 冠军'
+    ]
   }
 }

@@ -470,6 +470,23 @@ html, body { scrollbar-gutter: stable; }
   backdrop-filter: blur(4px);
 }
 
+/* 🆕 全站通用：银白金属质感 VS */
+.universal-vs {
+  font-size: 56px;
+  font-weight: 900;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  /* 银白渐变 */
+  background: linear-gradient(180deg, #ffffff 0%, #b0b8c8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* 阴影与立体感 */
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.8));
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
