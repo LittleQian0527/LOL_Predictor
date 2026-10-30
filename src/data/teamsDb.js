@@ -207,4 +207,22 @@ export const teamsDb = {
       avgTime: '34:25'     // Average game duration
     }
   },
+    g2: {
+    id: 'g2',
+    name: 'G2',
+    region: 'LEC', // 或 EUW
+    logo: '/images/teams/g2-team-icon.png',
+    scale: 1.0,
+    games: 10, // 9W - 1L
+    stats: {
+      winRate: '90%',
+      gd15: 856,           // Gold Differential at 15 min: +483
+      kpm: '16.4',         // Kills Per Game: 16.4
+      deaths: '10',        // Deaths Per Game: 10
+      dragonRate: '67.2%', // Dragons / game: 2.9 (67.2%)
+      vspm: '10.8',        // Vision Score Per Minute: 10.8
+      fbRate: '50%',       // First Blood: 50%
+      avgTime: '31:19'     // Average game duration: 31:19
+    }
+  },
 }

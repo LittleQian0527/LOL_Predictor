@@ -122,3 +122,7 @@ export const statDefsByRole = { top: topStatDefs, jug: jugStatDefs, mid: midStat
 - [ ] **画质排查**：下次录屏时排查 EV/OBS 和剪映导出的画质模糊问题（可能涉及 Windows DPI 缩放或推流码率）。
 - [ ] **排版微调**：继续优化 3:4 封面在超长文字下的排版细节。
 - [ ] **自动化接入**：未来规划接入 html2canvas 一键截图，以及 Riot API / 爬虫自动化更新数据。
+
+## ✅ 最新进度更新 (v4.0)
+1. **导出功能落地**：安装 `html2canvas` 依赖，并成功抽离出全局公共导出组件 `ExportBtn.vue`。实现了按需传入目标 DOM ID 即可一键导出超清图片的功能，完美遵循 DRY 原则。
+2. **素材库扩充**：补充了 G2 与 HLE 等战队的队标及选手高清抠图素材，完善了 `public/images/` 目录结构。

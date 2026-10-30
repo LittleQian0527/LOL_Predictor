@@ -321,4 +321,30 @@ export const supPlayers = {
       kda: 4.1
     }
   },
+  labrov: {
+    id: 'labrov',
+    name: 'Labrov',
+    team: 'G2',
+    role: 'sup',
+    games: 10, // 9W - 1L
+    avatar: '/images/players/sup/labrov.png',
+    scale: 1.0,
+    champions: [
+      { name: '萨勒芬妮', icon: '/images/champions/Seraphine.png', games: 2, winRate: 100, kda: 4.1 },
+      { name: '洛', icon: '/images/champions/Rakan.png', games: 2, winRate: 50, kda: 1.6 },
+      { name: '露露', icon: '/images/champions/Lulu.png', games: 2, winRate: 100, kda: 9.3 },
+      { name: '牛头', icon: '/images/champions/Alistar.png', games: 1, winRate: 100, kda: 3.2 },
+      { name: '卡尔玛', icon: '/images/champions/Karma.png', games: 1, winRate: 100, kda: 9.5 },
+      { name: '泰坦', icon: '/images/champions/Nautilus.png', games: 1, winRate: 100, kda: 2.0 },
+      { name: '光辉', icon: '/images/champions/Lux.png', games: 1, winRate: 100, kda: '-' }
+    ],
+    stats: {
+      kp: 67,
+      vspm: 4.14,
+      kpm: 0.39,
+      gpm: 287,
+      wpm: 1.99,
+      kda: 4.6
+    }
+  },
 }

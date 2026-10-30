@@ -133,5 +133,23 @@ export const coachesDb = {
     trophies: [
       '2021 MSI 冠军'
     ]
-  }
+  },
+  perkz: {
+    id: 'perkz',
+    name: 'Perkz',
+    team: 'G2',
+    avatar: '/images/coaches/perkz.png',
+    scale: 1.0,
+    careerTeams: ['G2'], // 2026年首次担任主教练，此前为G2位置教练
+    trophies: [
+      '2026 LEC 夏季赛冠军',
+      '2026 全球先锋赛亚军', // 以教练身份随队获得
+      '2026 MSI 四强'      // 以教练身份随队获得
+    ],
+    worldsCount: 1, // 以教练身份首次进入世界赛
+    worldsRole: '主教练',
+    worldsHistory: [
+      { year: 2026, result: '待定' } // S16世界赛正在进行中
+    ]
+  },
 }

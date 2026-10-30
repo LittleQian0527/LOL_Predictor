@@ -187,6 +187,10 @@ const emit = defineEmits(['openFullscreen'])
   gap: 40px;
 }
 .board--fullscreen .trophy-title { font-size: 18px; }
+/* 🆕 全屏下的荣誉列表，间距加大 */
+.board--fullscreen .trophy-list {
+  gap: 12px 40px; /* 行距和列距都拉宽 */
+}
 .board--fullscreen .trophy-item { font-size: 22px; margin-bottom: 12px; }
 .board--fullscreen .trophy-icon { font-size: 24px; }
 
@@ -272,11 +276,24 @@ const emit = defineEmits(['openFullscreen'])
 
 .trophy-title { font-size: 13px; font-weight: 700; color: #8a93a6; margin-bottom: 4px; letter-spacing: 0.1em; }
 
-.trophy-list { display: flex; flex-direction: column; gap: 8px; }
+.trophy-list { 
+  display: grid; 
+  grid-template-rows: repeat(3, auto); /* 🆕 强制最多3行 */
+  grid-auto-flow: column;              /* 🆕 超过3行自动换列 */
+  gap: 8px 24px;                       /* 🆕 行间距 8px，列间距 24px */
+}
 .trophy--left .trophy-list { align-items: flex-end; }
 .trophy--right .trophy-list { align-items: flex-start; }
 
-.trophy-item { font-size: 15px; font-weight: 700; color: #e9ecf1; display: flex; align-items: center; gap: 6px; }
+.trophy-item { 
+  font-size: 15px; 
+  font-weight: 700; 
+  color: #e9ecf1; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  white-space: nowrap; /* 🆕 防止长文字折行破坏网格 */
+}
 .trophy--left .trophy-item { flex-direction: row; }
 .trophy--right .trophy-item { flex-direction: row; }
 

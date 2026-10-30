@@ -326,4 +326,31 @@ export const midPlayers = {
       kda: 3.6
     }
   },
+  caps: {
+    id: 'caps',
+    name: 'Caps',
+    team: 'G2',
+    role: 'mid',
+    games: 10, // 9W - 1L
+    avatar: '/images/players/mid/caps.png',
+    scale: 1.0,
+    champions: [
+      { name: '发条', icon: '/images/champions/Orianna.png', games: 2, winRate: 100, kda: 16.5 },
+      { name: '妖姬', icon: '/images/champions/LeBlanc.png', games: 2, winRate: 100, kda: 4.0 },
+      { name: '永恩', icon: '/images/champions/Yone.png', games: 1, winRate: 100, kda: '-' },
+      { name: '维克托', icon: '/images/champions/Viktor.png', games: 1, winRate: 100, kda: 6.0 },
+      { name: '加里奥', icon: '/images/champions/Galio.png', games: 1, winRate: 100, kda: 6.0 },
+      { name: '辛德拉', icon: '/images/champions/Syndra.png', games: 1, winRate: 0, kda: 0.3 },
+      { name: '小炮', icon: '/images/champions/Tristana.png', games: 1, winRate: 100, kda: 8.0 },
+      { name: '阿卡丽', icon: '/images/champions/Akali.png', games: 1, winRate: 100, kda: 12.0 }
+    ],
+    stats: {
+      dpm: 639.5,
+      dmgConv: 146.3,
+      kp: 67.9,
+      csd: 9.2,
+      gpm: 437,
+      kda: 7.1
+    }
+  },
 }

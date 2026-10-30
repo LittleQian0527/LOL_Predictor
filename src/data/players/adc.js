@@ -326,4 +326,29 @@ export const adcPlayers = {
       kda: 4.0
     }
   },
+  hanssama: {
+    id: 'hanssama',
+    name: 'Hans Sama',
+    team: 'G2',
+    role: 'adc',
+    games: 10, // 9W - 1L
+    avatar: '/images/players/adc/hanssama.png',
+    scale: 1.0,
+    champions: [
+      { name: '芸阿娜', icon: '/images/champions/Yunara.png', games: 3, winRate: 100, kda: 6.7 },
+      { name: '寒冰', icon: '/images/champions/Ashe.png', games: 2, winRate: 100, kda: 5.8 },
+      { name: '霞', icon: '/images/champions/Xayah.png', games: 2, winRate: 50, kda: 3.5 },
+      { name: '伊泽瑞尔', icon: '/images/champions/Ezreal.png', games: 1, winRate: 100, kda: 5.3 },
+      { name: '女枪', icon: '/images/champions/MissFortune.png', games: 1, winRate: 100, kda: '-' },
+      { name: '女警', icon: '/images/champions/Caitlyn.png', games: 1, winRate: 100, kda: '-' }
+    ],
+    stats: {
+      dpm: 803.1,
+      dmgConv: 154.1, // 计算得出 (803.1 / 521)
+      csd: 10.7,
+      gpm: 521,
+      kp: 57.5,
+      kda: 6.7
+    }
+  },
 }

@@ -324,4 +324,58 @@ export const jugPlayers = {
       kda: 3.0
     }
   },
+  skewmond: {
+    id: 'skewmond',
+    name: 'SkewMond',
+    team: 'G2',
+    role: 'jug',
+    games: 10, // 9W - 1L
+    avatar: '/images/players/jug/skewmond.png',
+    scale: 1.0,
+    champions: [
+      { name: '赵信', icon: '/images/champions/XinZhao.png', games: 2, winRate: 100, kda: 7.0 },
+      { name: '蝎子', icon: '/images/champions/Skarner.png', games: 2, winRate: 100, kda: 7.3 },
+      { name: '潘森', icon: '/images/champions/Pantheon.png', games: 1, winRate: 100, kda: 8.0 },
+      { name: '皇子', icon: '/images/champions/JarvanIV.png', games: 1, winRate: 100, kda: 7.5 },
+      { name: '大虫子', icon: '/images/champions/Chogath.png', games: 1, winRate: 0, kda: 0.0 },
+      { name: '大树', icon: '/images/champions/Maokai.png', games: 1, winRate: 100, kda: 8.0 },
+      { name: '猴子', icon: '/images/champions/MonkeyKing.png', games: 1, winRate: 100, kda: 13.0 },
+      { name: '波比', icon: '/images/champions/Poppy.png', games: 1, winRate: 100, kda: 13.0 }
+    ],
+    stats: {
+      kp: 59.6,
+      dpm: 429,
+      gd15: -71,
+      vspm: 2.01,
+      kpm: 0.34,
+      kda: 5.9
+    }
+  },
+  brokenblade: {
+    id: 'brokenblade',
+    name: 'BrokenBlade',
+    team: 'G2',
+    role: 'top',
+    games: 10, // 9W - 1L
+    avatar: '/images/players/top/brokenblade.png',
+    scale: 1.0,
+    champions: [
+      { name: '青钢影', icon: '/images/champions/Camille.png', games: 2, winRate: 100, kda: 2.3 },
+      { name: '兰博', icon: '/images/champions/Rumble.png', games: 2, winRate: 100, kda: 19.0 },
+      { name: '奥拉夫', icon: '/images/champions/Olaf.png', games: 1, winRate: 100, kda: 2.0 },
+      { name: '奎桑提', icon: '/images/champions/KSante.png', games: 1, winRate: 100, kda: 4.5 },
+      { name: 'Zaahan', icon: '/images/champions/Zaahan.png', games: 1, winRate: 0, kda: 0.0 },
+      { name: '安蓓萨', icon: '/images/champions/Ambessa.png', games: 1, winRate: 100, kda: 3.0 },
+      { name: '克烈', icon: '/images/champions/Kled.png', games: 1, winRate: 100, kda: 10.0 },
+      { name: '慎', icon: '/images/champions/Shen.png', games: 1, winRate: 100, kda: '-' }
+    ],
+    stats: {
+      dpm: 570.0,
+      dmgShare: 21.5,
+      csd: 8.3,
+      gpm: 395,
+      kp: 49.1,
+      kda: 3.7
+    }
+  },
 }
