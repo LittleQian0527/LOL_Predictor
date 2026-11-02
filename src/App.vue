@@ -1,21 +1,48 @@
 <script setup>
-import { ref, computed, onMounted,onUnmounted,watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import FilterArea from './board/FilterArea.vue'
 import MatchList from './board/MatchList.vue'
 import VersusBoard from './board/VersusBoard.vue'
 import TeamCompareBoard from './board/TeamCompareBoard.vue'
 import CoachCompareBoard from './board/CoachCompareBoard.vue'
 
-import { playersDb } from './data/playersDb'
-import { teamsDb } from './data/teamsDb'
+// ================= 🆕 引入多赛事数据源 =================
+// 季后赛数据
+import { playersDb as playoffsPlayersDb } from './data/s16_playoffs/playersDb'
+import { teamsDb as playoffsTeamsDb } from './data/s16_playoffs/teamsDb'
+
+// 世界赛数据
+import { playersDb as worldsPlayersDb } from './data/s16_worlds/playersDb'
+import { teamsDb as worldsTeamsDb } from './data/s16_worlds/teamsDb'
+
+// 🆕 教练数据（全局共用，不随赛事改变）
 import { coachesDb } from './data/coachesDb'
+
+// 🆕 建立数据源映射表
+const dataSources = {
+  s16_playoffs: {
+    label: '2026 季后赛',
+    teams: playoffsTeamsDb,
+    players: playoffsPlayersDb,
+  },
+  s16_worlds: {
+    label: '2026 世界赛瑞士轮',
+    teams: worldsTeamsDb,
+    players: worldsPlayersDb,
+  }
+}
 
 // ================= 状态管理 =================
 const currentView = ref('match') // 'match' | 'compare' | 'coach'
 const currentFilters = ref({})
 const selectedMatch = ref(null) // 战队弹窗状态
-// 🆕 控制是否只显示纯背景
 const showBgOnly = ref(false)
+
+// 🆕 当前选中的赛事类型
+const selectedCompetition = ref('s16_playoffs')
+// 🆕 动态获取当前数据源
+const currentData = computed(() => dataSources[selectedCompetition.value])
+
 // 🆕 快捷键逻辑（B键隐藏UI，Esc退出）
 const handleKeydown = (e) => {
   if (e.key.toLowerCase() === 'b') {
@@ -26,15 +53,15 @@ const handleKeydown = (e) => {
 }
 
 // ==========================================
-// 🆕 下拉框与联动逻辑（分离选择状态与提交状态）
+// 下拉框与联动逻辑
 // ==========================================
 
 // 1. 战队选择
 const teamAId = ref('')
 const teamBId = ref('')
-const teamList = computed(() => Object.values(teamsDb))
-const selectedTeamA = computed(() => teamsDb[teamAId.value] || null)
-const selectedTeamB = computed(() => teamsDb[teamBId.value] || null)
+const teamList = computed(() => Object.values(currentData.value.teams))
+const selectedTeamA = computed(() => currentData.value.teams[teamAId.value] || null)
+const selectedTeamB = computed(() => currentData.value.teams[teamBId.value] || null)
 
 // 2. 选手选择
 const roleList = [
@@ -47,27 +74,25 @@ const roleList = [
 const selectedRole = ref('top')
 const playerAId = ref('')
 const playerBId = ref('')
-
-// 🆕 真正用于渲染画板的确认状态
 const confirmedPlayerAId = ref('')
 const confirmedPlayerBId = ref('')
 
 const filteredPlayers = computed(() => {
-  return Object.values(playersDb).filter(p => p.role === selectedRole.value)
+  return Object.values(currentData.value.players).filter(p => p.role === selectedRole.value)
 })
 
-// 当位置改变时，仅重置下拉框的选中项，不影响画板展示
+// 当位置改变时，仅重置下拉框的选中项
 watch(selectedRole, () => {
   const list = filteredPlayers.value
   playerAId.value = list.length > 0 ? list[0].id : ''
   playerBId.value = list.length > 1 ? list[1].id : playerAId.value
 }, { immediate: true })
 
-// 画板实际使用的数据（由确认状态决定）
-const playerA = computed(() => playersDb[confirmedPlayerAId.value] || {})
-const playerB = computed(() => playersDb[confirmedPlayerBId.value] || {})
+// 画板实际使用的数据
+const playerA = computed(() => currentData.value.players[confirmedPlayerAId.value] || {})
+const playerB = computed(() => currentData.value.players[confirmedPlayerBId.value] || {})
 
-// 3. 教练选择 (树状分组)
+// 3. 教练选择 (全局共用)
 const coachAId = ref('')
 const coachBId = ref('')
 const confirmedCoachAId = ref('')
@@ -83,23 +108,30 @@ const groupedCoaches = computed(() => {
   return groups
 })
 
-// 初始化默认下拉框教练
 const allCoaches = Object.values(coachesDb || {})
 coachAId.value = allCoaches.length > 0 ? allCoaches[0].id : ''
 coachBId.value = allCoaches.length > 1 ? allCoaches[1].id : coachAId.value
 
-// 画板实际使用的教练数据
 const coachA = computed(() => coachesDb[confirmedCoachAId.value] || {})
 const coachB = computed(() => coachesDb[confirmedCoachBId.value] || {})
 
+// 🆕 当赛事类型切换时，清空所有选择，防止数据串台报错
+watch(selectedCompetition, () => {
+  teamAId.value = ''
+  teamBId.value = ''
+  playerAId.value = ''
+  playerBId.value = ''
+  confirmedPlayerAId.value = ''
+  confirmedPlayerBId.value = ''
+  selectedMatch.value = null
+})
 
 // ==========================================
-// 🆕 点击“生成对比”按钮的分发逻辑
+// 点击“生成对比”按钮的分发逻辑
 // ==========================================
 function handleGenerate() {
   if (currentView.value === 'match') {
     if (!selectedTeamA.value || !selectedTeamB.value) return
-    // 战队：直接弹出弹窗
     selectedMatch.value = {
       teamA: selectedTeamA.value,
       teamB: selectedTeamB.value,
@@ -108,20 +140,17 @@ function handleGenerate() {
     }
   } else if (currentView.value === 'compare') {
     if (!playerAId.value || !playerBId.value) return
-    // 选手：更新确认状态，画板渲染
     confirmedPlayerAId.value = playerAId.value
     confirmedPlayerBId.value = playerBId.value
   } else if (currentView.value === 'coach') {
     if (!coachAId.value || !coachBId.value) return
-    // 教练：更新确认状态，画板渲染
     confirmedCoachAId.value = coachAId.value
     confirmedCoachBId.value = coachBId.value
   }
 }
 
-
 // ==========================================
-// 原有逻辑与全屏跳转
+// 生命周期与全屏解析逻辑
 // ==========================================
 const isFullscreenMode = ref(false)
 const fullscreenMatch = ref(null)
@@ -131,10 +160,14 @@ const fullscreenCoachA = ref(null)
 const fullscreenCoachB = ref(null)
 
 onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  
   const params = new URLSearchParams(window.location.search)
   const mode = params.get('mode')
+  // 🆕 获取 URL 中的赛事类型，默认季后赛
+  const comp = params.get('comp') || 's16_playoffs'
+  const sourceData = dataSources[comp]
   
-  window.addEventListener('keydown', handleKeydown)
   if (mode === 'compare') {
     isFullscreenMode.value = true
     fullscreenMatch.value = {
@@ -147,16 +180,19 @@ onMounted(() => {
   
   if (mode === 'player') {
     isFullscreenMode.value = true
-    fullscreenPlayerA.value = playersDb[params.get('playerA')]
-    fullscreenPlayerB.value = playersDb[params.get('playerB')]
+    // 🆕 从对应赛事的数据源中取选手
+    fullscreenPlayerA.value = sourceData.players[params.get('playerA')]
+    fullscreenPlayerB.value = sourceData.players[params.get('playerB')]
   }
 
   if (mode === 'coach') {
     isFullscreenMode.value = true
+    // 教练全局共用
     fullscreenCoachA.value = coachesDb[params.get('coachA')]
     fullscreenCoachB.value = coachesDb[params.get('coachB')]
   }
 })
+
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
@@ -166,9 +202,11 @@ function handleSelectMatch(match) { selectedMatch.value = match }
 function closeModal() { selectedMatch.value = null }
 
 // ================= 全屏跳转逻辑 =================
+// 🆕 所有跳转都要带上 comp 参数
 function handleOpenFullscreen(match) {
   const query = new URLSearchParams({
     mode: 'compare',
+    comp: selectedCompetition.value,
     teamA: match.teamA.name, teamB: match.teamB.name,
     score: match.score || '', status: match.status || '',
     teamAId: match.teamA.id || '', teamBId: match.teamB.id || ''
@@ -180,6 +218,7 @@ function handlePlayerFullscreen() {
   if (!playerA.value.id || !playerB.value.id) return
   const query = new URLSearchParams({
     mode: 'player',
+    comp: selectedCompetition.value,
     playerA: playerA.value.id, playerB: playerB.value.id
   }).toString()
   window.open('/?' + query, '_blank')
@@ -189,6 +228,7 @@ function handleCoachFullscreen() {
   if (!coachA.value.id || !coachB.value.id) return
   const query = new URLSearchParams({
     mode: 'coach',
+    comp: selectedCompetition.value,
     coachA: coachA.value.id, coachB: coachB.value.id
   }).toString()
   window.open('/?' + query, '_blank')
@@ -196,9 +236,7 @@ function handleCoachFullscreen() {
 </script>
 
 <template>
-     <!-- 1. 独立全屏网页模式 -->
   <div v-if="isFullscreenMode" class="fullscreen-wrapper">
-    <!-- 🆕 删除了背景图和遮罩，直接放画板 -->
     <TeamCompareBoard v-if="fullscreenMatch" :match="fullscreenMatch" :is-fullscreen="true" />
     <VersusBoard v-if="fullscreenPlayerA && fullscreenPlayerB" :player-a="fullscreenPlayerA" :player-b="fullscreenPlayerB" :is-fullscreen="true" />
     <CoachCompareBoard v-if="fullscreenCoachA && fullscreenCoachB" :coach-a="fullscreenCoachA" :coach-b="fullscreenCoachB" :is-fullscreen="true" />
@@ -214,6 +252,13 @@ function handleCoachFullscreen() {
         
         <!-- 智能数据选择器 -->
         <div class="smart-selectors">
+          <!-- 🆕 赛事类型下拉框 -->
+          <select v-model="selectedCompetition" class="custom-select small-select" style="width: 150px; border-color: #e23a4e;">
+            <option v-for="(source, key) in dataSources" :key="key" :value="key">
+              {{ source.label }}
+            </option>
+          </select>
+
           <!-- 赛事查询页 -->
           <template v-if="currentView === 'match'">
             <select v-model="teamAId" class="custom-select small-select">
@@ -225,7 +270,6 @@ function handleCoachFullscreen() {
               <option value="" disabled>选择战队 B</option>
               <option v-for="t in teamList" :key="t.id" :value="t.id">{{ t.name }}</option>
             </select>
-            <!-- 按钮：生成战队对比 -->
             <button class="quick-btn" @click="handleGenerate">生成对比</button>
           </template>
 
@@ -243,7 +287,6 @@ function handleCoachFullscreen() {
               <option value="" disabled>选手 B</option>
               <option v-for="p in filteredPlayers" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
-            <!-- 按钮：生成选手对比 -->
             <button class="quick-btn" @click="handleGenerate">生成对比</button>
           </template>
 
@@ -262,7 +305,6 @@ function handleCoachFullscreen() {
                 <option v-for="c in coaches" :key="c.id" :value="c.id">{{ c.name }}</option>
               </optgroup>
             </select>
-            <!-- 按钮：生成教练对比 -->
             <button class="quick-btn" @click="handleGenerate">生成对比</button>
           </template>
         </div>
@@ -284,14 +326,12 @@ function handleCoachFullscreen() {
       <!-- 选手对比视图 -->
       <div v-if="currentView === 'compare'" class="app-view is-center">
         <div class="compare-wrapper">
-          <!-- 🆕 只有 confirmedPlayerAId 有值时才渲染 -->
           <VersusBoard 
             v-if="confirmedPlayerAId && confirmedPlayerBId"
             :player-a="playerA" 
             :player-b="playerB" 
             @openFullscreen="handlePlayerFullscreen"
           />
-          <!-- 提示文案（未点击生成前显示） -->
           <div v-else class="empty-tip">
             请选择选手并点击“生成对比”
           </div>
@@ -301,14 +341,12 @@ function handleCoachFullscreen() {
       <!-- 教练对比视图 -->
       <div v-if="currentView === 'coach'" class="app-view is-center">
         <div class="compare-wrapper">
-          <!-- 🆕 只有 confirmedCoachAId 有值时才渲染 -->
           <CoachCompareBoard 
             v-if="confirmedCoachAId && confirmedCoachBId"
             :coach-a="coachA" 
             :coach-b="coachB" 
             @openFullscreen="handleCoachFullscreen"
           />
-          <!-- 提示文案（未点击生成前显示） -->
           <div v-else class="empty-tip">
             请选择教练并点击“生成对比”
           </div>
@@ -332,25 +370,16 @@ function handleCoachFullscreen() {
 </template>
 
 <style>
-/* ... (样式部分完全保留你原来的，只新增了 empty-tip 提示词样式) ... */
+/* 你的样式完全不用动，直接复制你刚才发的那一大段 <style> 即可 */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; }
 body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; color: #e9ecf1; background-color: #040405; }
 
 .app-container {
-  position: relative;
-  /* 🆕 将 min-height 改为 height 100vh，防止被撑开 */
-  height: 100vh; 
-  width: 100vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  position: relative; height: 100vh; width: 100vw;
+  display: flex; justify-content: center; align-items: center; padding: 20px;
   background-image: url('/images/indexBG/worlds-2026.jpg'); 
-  background-size: cover;       
-  background-position: center;  
-  background-attachment: fixed; 
-  background-repeat: no-repeat;
+  background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;
   overflow: hidden; 
 }
 
@@ -358,14 +387,9 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 
 .app-workspace {
   position: relative; z-index: 2; 
-  /* 🆕 统一使用 90vw 和 90vh，完美自适应任何屏幕 */
-  width: 90vw; 
-  height: 90vh; 
-  max-width: 1800px; /* 限制一下超宽屏 */
-  max-height: 1000px;
+  width: 90vw; height: 90vh; max-width: 1800px; max-height: 1000px;
   display: flex; flex-direction: column;
-  background: rgba(18, 19, 25, 0.75); 
-  backdrop-filter: blur(12px); 
+  background: rgba(18, 19, 25, 0.75); backdrop-filter: blur(12px); 
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 22px; overflow: hidden;
   box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -404,7 +428,6 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 
 .vs-mini { font-size: 14px; font-weight: 900; color: #e23a4e; font-style: italic; margin: 0 4px; }
 
-/* 新增的生成按钮样式 */
 .quick-btn {
   background: #b31b2c; border: none; color: #fff; padding: 6px 16px;
   border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s;
@@ -412,7 +435,6 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 }
 .quick-btn:hover { background: #e23a4e; box-shadow: 0 0 15px rgba(226, 58, 78, 0.5); }
 
-/* 空状态提示词 */
 .empty-tip {
   color: #4b5363; font-size: 16px; font-weight: 600; padding: 60px 0;
   letter-spacing: 0.1em; animation: fadeIn 0.4s ease;
@@ -437,16 +459,9 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 
 .fullscreen-wrapper {
-  width: 100vw; 
-  height: 100vh; 
-  background: #040405; /* 纯黑底，录出来最干净 */
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
-  overflow: hidden;
-  padding: 0; /* 去掉内边距，让画板彻底撑满 */
+  width: 100vw; height: 100vh; background: #040405; 
+  display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 0; 
 }
-
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -455,36 +470,17 @@ body { font-family: 'Sora', -apple-system, 'PingFang SC', 'Microsoft YaHei', san
 .is-scrolling::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
 html, body { scrollbar-gutter: stable; }
 
-/* 🆕 纯背景模式提示词 */
 .bg-tip {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  z-index: 9999;
-  pointer-events: none;
-  backdrop-filter: blur(4px);
+  position: fixed; bottom: 30px; right: 30px; background: rgba(0,0,0,0.6);
+  color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 9999;
+  pointer-events: none; backdrop-filter: blur(4px);
 }
 
-/* 🆕 全站通用：银白金属质感 VS */
 .universal-vs {
-  font-size: 56px;
-  font-weight: 900;
-  font-style: normal;
-  letter-spacing: 0.02em;
-  line-height: 1;
-  /* 银白渐变 */
+  font-size: 56px; font-weight: 900; font-style: normal; letter-spacing: 0.02em; line-height: 1;
   background: linear-gradient(180deg, #ffffff 0%, #b0b8c8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  /* 阴影与立体感 */
-  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.8));
-  text-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.8)); text-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
 }
 
 @keyframes fadeIn {
