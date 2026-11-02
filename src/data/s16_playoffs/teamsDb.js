@@ -3,7 +3,7 @@ export const teamsDb = {
     id: 'ig',
     name: 'IG',
     region: 'LPL',
-    logo: '/images/teams/ig-team-icon.png',
+    logo: '/images/teams/ig.png',
     scale: 1.0,
     games: 20,
     stats: {
@@ -21,7 +21,7 @@ export const teamsDb = {
     id: 'gen',
     name: 'GEN',
     region: 'LCK',
-    logo: '/images/teams/gen-team-icon.png',
+    logo: '/images/teams/gen.png',
     scale: 1.0,
     games: 11,
     stats: {
@@ -39,7 +39,7 @@ export const teamsDb = {
     id: 'hle',
     name: 'HLE',
     region: 'LCK',
-    logo: '/images/teams/hle-team-icon.png',
+    logo: '/images/teams/hle.png',
     scale: 1.0,
     games: 17,
     stats: {
@@ -57,7 +57,7 @@ export const teamsDb = {
     id: 'tes',
     name: 'TES',
     region: 'LPL',
-    logo: '/images/teams/tes-team-icon.png',
+    logo: '/images/teams/tes.png',
     scale: 1.0,
     games: 10,
     stats: {
@@ -75,7 +75,7 @@ export const teamsDb = {
     id: 'blg',
     name: 'BLG',
     region: 'LPL',
-    logo: '/images/teams/blg-team-icon.png',
+    logo: '/images/teams/blg.png',
     scale: 1.0,
     games: 11,
     stats: {
@@ -93,7 +93,7 @@ export const teamsDb = {
     id: 'mkoi',
     name: 'MKOI',
     region: 'LEC',
-    logo: '/images/teams/mkoi-team-icon.png',
+    logo: '/images/teams/mkoi.png',
     scale: 1.0,
     games: 15,
     stats: {
@@ -111,7 +111,7 @@ export const teamsDb = {
     id: 'al',
     name: 'AL',
     region: 'LPL',
-    logo: '/images/teams/al-team-icon.png',
+    logo: '/images/teams/al.png',
     scale: 1.0,
     games: 16,
     stats: {
@@ -129,7 +129,7 @@ export const teamsDb = {
     id: 'kc',
     name: 'KC',
     region: 'LEC',
-    logo: '/images/teams/kc-team-icon.png',
+    logo: '/images/teams/kc.png',
     scale: 1.0,
     games: 11,
     stats: {
@@ -147,7 +147,7 @@ export const teamsDb = {
     id: 't1',
     name: 'T1',
     region: 'LCK',
-    logo: '/images/teams/t1-team-icon.png',
+    logo: '/images/teams/t1.png',
     scale: 1.0,
     games: 18,
     stats: {
@@ -165,7 +165,7 @@ export const teamsDb = {
     id: 'los',
     name: 'LOS',
     region: 'CBLOL',
-    logo: '/images/teams/los-team-icon.png',
+    logo: '/images/teams/los.png',
     scale: 1.0,
     games: 14,
     stats: {
@@ -183,7 +183,7 @@ export const teamsDb = {
     id: 'lyon',
     name: 'LYON',
     region: 'NA',
-    logo: '/images/teams/lyon-team-icon.png',
+    logo: '/images/teams/lyon.png',
     scale: 1.0,
     games: 16, // 8W - 8L
     stats: {
@@ -201,7 +201,7 @@ export const teamsDb = {
     id: 'g2',
     name: 'G2',
     region: 'LEC', // 或 EUW
-    logo: '/images/teams/g2-team-icon.png',
+    logo: '/images/teams/g2.png',
     scale: 1.0,
     games: 10, // 9W - 1L
     stats: {
