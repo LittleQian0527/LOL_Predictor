@@ -108,10 +108,16 @@ watch(selectedCompetition, () => {
 // ==========================================
 function handleGenerate() {
   if (currentView.value === 'match') {
-    if (!selectedTeamA.value || !selectedTeamB.value) return
+    // 🆕 直接从 currentData 里面取，确保拿到的是当前赛事的数据
+    const dataA = currentData.value.teams[teamAId.value]
+    const dataB = currentData.value.teams[teamBId.value]
+    
+    // 如果没找到，或者没数据，就不往下走
+    if (!dataA || !dataB) return 
+
     selectedMatch.value = {
-      teamA: selectedTeamA.value,
-      teamB: selectedTeamB.value,
+      teamA: dataA,
+      teamB: dataB,
       score: '',
       status: ''
     }
@@ -141,30 +147,33 @@ onMounted(() => {
   
   const params = new URLSearchParams(window.location.search)
   const mode = params.get('mode')
-  // 🆕 获取 URL 中的赛事类型，默认季后赛
   const comp = params.get('comp') || 's16_playoffs'
-  const sourceData = dataSources[comp]
+  const sourceData = dataSources[comp] || dataSources['s16_playoffs']
   
   if (mode === 'compare') {
     isFullscreenMode.value = true
+    const teamAId = params.get('teamAId')
+    const teamBId = params.get('teamBId')
+    
+    // 🆕 战队从当前赛事的 teams 找
     fullscreenMatch.value = {
-      teamA: { name: params.get('teamA'), id: params.get('teamAId') },
-      teamB: { name: params.get('teamB'), id: params.get('teamBId') },
-      score: params.get('score'),
-      status: params.get('status')
+      teamA: sourceData.teams[teamAId] || { name: params.get('teamA') },
+      teamB: sourceData.teams[teamBId] || { name: params.get('teamB') },
+      score: params.get('score') || '',
+      status: params.get('status') || ''
     }
   }
   
   if (mode === 'player') {
     isFullscreenMode.value = true
-    // 🆕 从对应赛事的数据源中取选手
+    // 🆕 选手从当前赛事的 players 找
     fullscreenPlayerA.value = sourceData.players[params.get('playerA')]
     fullscreenPlayerB.value = sourceData.players[params.get('playerB')]
   }
 
   if (mode === 'coach') {
     isFullscreenMode.value = true
-    // 教练全局共用
+    // 🆕 教练是全局的，直接从 coachesDb 找
     fullscreenCoachA.value = coachesDb[params.get('coachA')]
     fullscreenCoachB.value = coachesDb[params.get('coachB')]
   }
@@ -183,10 +192,14 @@ function closeModal() { selectedMatch.value = null }
 function handleOpenFullscreen(match) {
   const query = new URLSearchParams({
     mode: 'compare',
-    comp: selectedCompetition.value,
-    teamA: match.teamA.name, teamB: match.teamB.name,
-    score: match.score || '', status: match.status || '',
-    teamAId: match.teamA.id || '', teamBId: match.teamB.id || ''
+    comp: selectedCompetition.value, // 确保带了当前赛事
+    teamA: match.teamA.name, 
+    teamB: match.teamB.name,
+    score: match.score || '', 
+    status: match.status || '',
+    // 🆕 确保传了 ID
+    teamAId: match.teamA.id || '', 
+    teamBId: match.teamB.id || ''
   }).toString()
   window.open('/?' + query, '_blank') 
 }

@@ -1,11 +1,11 @@
-// 引入所有副表
-import { topStatDefs, topPlayers } from './players/top'
-import { jugStatDefs, jugPlayers } from './players/jug'
-import { midStatDefs, midPlayers } from './players/mid'
-import { adcStatDefs, adcPlayers } from './players/adc'
-import { supStatDefs, supPlayers } from './players/sup'
+// 只引入选手数据，不引入指标
+import { topPlayers } from './players/top'
+import { jugPlayers } from './players/jug'
+import { midPlayers } from './players/mid'
+import { adcPlayers } from './players/adc'
+import { supPlayers } from './players/sup'
 
-// ================= 1. 合并所有选手到一个大表 =================
+// ================= 合并所有选手到一个大表 =================
 export const playersDb = {
   ...topPlayers,
   ...jugPlayers,
@@ -14,12 +14,6 @@ export const playersDb = {
   ...supPlayers,
 }
 
-// ================= 2. 数据指标配置中心 =================
-// 以后组件想知道该显示什么数据，就调用这个方法
-export const statDefsByRole = {
-  top: topStatDefs,
-  jug: jugStatDefs,
-  mid: midStatDefs,
-  adc: adcStatDefs,
-  sup: supStatDefs,
-}
+// 🆕 注意：statDefsByRole 已经彻底搬到 src/data/statConfig.js 了
+// 以后组件需要指标，直接 import { statDefsByRole } from '../data/statConfig'
+// 这个文件现在只负责乖乖存数据！

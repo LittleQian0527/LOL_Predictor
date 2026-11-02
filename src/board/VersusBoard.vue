@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import FullscreenBackBtn from './FullscreenBackBtn.vue'
+import { statDefsByRole } from '../data/statConfig'
 
 const props = defineProps({
   playerA: { type: Object, required: true },
