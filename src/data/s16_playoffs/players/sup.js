@@ -1,12 +1,3 @@
-// 辅助数据指标
-export const supStatDefs = [
-  { key: 'kp', label: '参团率', suffix: '%' },
-  { key: 'vspm', label: '分均视野得分' },
-  { key: 'kpm', label: '分均参与击杀' },
-  { key: 'gpm', label: '分均经济' },
-  { key: 'wpm', label: '每分钟插眼数' },
-  { key: 'kda', label: 'KDA' },
-]
 
 export const supPlayers = {
   meiko: {

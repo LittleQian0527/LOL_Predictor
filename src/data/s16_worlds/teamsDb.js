@@ -1,13 +1,3 @@
-// 战队数据指标字典（决定前端画板的渲染顺序和名字）
-export const teamStatDefs = [
-  { key: 'winRate', label: '胜率', isPercent: true },
-  { key: 'kpm', label: '场均击杀' },
-  { key: 'gd15', label: '15分钟经济差' },
-  { key: 'dragonRate', label: '小龙控制率', isPercent: true },
-  { key: 'fbRate', label: '一血率', isPercent: true },
-  { key: 'avgTime', label: '平均游戏时长' }, // 🆕 替换了这一项
-]
-
 export const teamsDb = {
   ig: {
     id: 'ig',

@@ -1,12 +1,3 @@
-// 中单数据指标
-export const midStatDefs = [
-  { key: 'dpm', label: '分均伤害' },
-  { key: 'dmgConv', label: '伤害转化率', suffix: '%' },
-  { key: 'kp', label: '参团率', suffix: '%' },
-  { key: 'csd', label: '分均补刀' },
-  { key: 'gpm', label: '分均经济' },
-  { key: 'kda', label: 'KDA' },
-]
 
 export const midPlayers = {
   rookie: {

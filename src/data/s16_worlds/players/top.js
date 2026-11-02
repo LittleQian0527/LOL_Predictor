@@ -1,13 +1,3 @@
-// 上单数据指标
-export const topStatDefs = [
-  { key: 'dpm', label: '分均伤害' },
-  { key: 'dmgShare', label: '伤害占比', suffix: '%' },
-  { key: 'csd', label: '分均补刀' },
-  { key: 'gpm', label: '分均经济' },
-  { key: 'kp', label: '参团率', suffix: '%' },
-  { key: 'kda', label: 'KDA' },
-]
-
 export const topPlayers = {
   theshy: {
     id: 'theshy', name: 'TheShy', team: 'IG', role: 'top', games: 20,

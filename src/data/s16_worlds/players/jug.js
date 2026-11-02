@@ -1,12 +1,4 @@
-// 打野数据指标
-export const jugStatDefs = [
-  { key: 'kp', label: '参团率', suffix: '%' },
-  { key: 'dpm', label: '分均伤害' },
-  { key: 'gd15', label: '15分钟经济差' },
-  { key: 'vspm', label: '分均视野得分' },
-  { key: 'kpm', label: '分均参与击杀' },
-  { key: 'kda', label: 'KDA' },
-]
+
 
 export const jugPlayers = {
   wei: {

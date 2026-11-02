@@ -6,36 +6,13 @@ import VersusBoard from './board/VersusBoard.vue'
 import TeamCompareBoard from './board/TeamCompareBoard.vue'
 import CoachCompareBoard from './board/CoachCompareBoard.vue'
 
-// ================= 🆕 引入多赛事数据源 =================
-// 季后赛数据
-import { playersDb as playoffsPlayersDb } from './data/s16_playoffs/playersDb'
-import { teamsDb as playoffsTeamsDb } from './data/s16_playoffs/teamsDb'
-
-// 世界赛数据
-import { playersDb as worldsPlayersDb } from './data/s16_worlds/playersDb'
-import { teamsDb as worldsTeamsDb } from './data/s16_worlds/teamsDb'
-
-// 🆕 教练数据（全局共用，不随赛事改变）
-import { coachesDb } from './data/coachesDb'
-
-// 🆕 建立数据源映射表
-const dataSources = {
-  s16_playoffs: {
-    label: '2026 季后赛',
-    teams: playoffsTeamsDb,
-    players: playoffsPlayersDb,
-  },
-  s16_worlds: {
-    label: '2026 世界赛瑞士轮',
-    teams: worldsTeamsDb,
-    players: worldsPlayersDb,
-  }
-}
+// ================= 🆕 从总表引入数据源 =================
+import { dataSources, coachesDb } from './data/index'
 
 // ================= 状态管理 =================
-const currentView = ref('match') // 'match' | 'compare' | 'coach'
+const currentView = ref('match') 
 const currentFilters = ref({})
-const selectedMatch = ref(null) // 战队弹窗状态
+const selectedMatch = ref(null) 
 const showBgOnly = ref(false)
 
 // 🆕 当前选中的赛事类型
@@ -320,7 +297,13 @@ function handleCoachFullscreen() {
       <!-- 赛事查询视图 -->
       <div v-if="currentView === 'match'" class="app-view">
         <FilterArea @search="handleSearch" />
-        <MatchList :filters="currentFilters" @selectMatch="handleSelectMatch" />
+        
+        <!-- 🆕 把 currentData.value.matches 传进去 -->
+        <MatchList 
+          :filters="currentFilters" 
+          :matches="currentData.matches || []" 
+          @selectMatch="handleSelectMatch" 
+        />
       </div>
 
       <!-- 选手对比视图 -->
