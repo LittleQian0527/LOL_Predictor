@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import FullscreenBackBtn from './FullscreenBackBtn.vue'
 import { statDefsByRole } from '../data/statConfig'
+import StatList from './StatList.vue'
 
 const props = defineProps({
   playerA: { type: Object, required: true },
@@ -13,9 +14,7 @@ const emit = defineEmits(['openFullscreen'])
 
 const animateBars = ref(false)
 onMounted(() => {
-  setTimeout(() => {
-    animateBars.value = true
-  }, 50)
+  setTimeout(() => { animateBars.value = true }, 50)
 })
 
 const activeChampionView = ref(null)
@@ -28,16 +27,6 @@ const currentStatDefs = computed(() => {
   const role = props.playerA.role || 'top'
   return statDefsByRole[role] || statDefsByRole['top']
 })
-
-const getWidth = (valA, valB) => {
-  let numA = Math.abs(parseFloat(String(valA).replace('%', ''))) || 0
-  let numB = Math.abs(parseFloat(String(valB).replace('%', ''))) || 0
-  const max = Math.max(numA, numB) || 1
-  return {
-    left: (numA / max) * 94,
-    right: (numB / max) * 94
-  }
-}
 </script>
 
 <template>
@@ -72,7 +61,6 @@ const getWidth = (valA, valB) => {
         <div class="champs-trigger" @click="toggleChampionView('A')">查看常用英雄</div>
       </div>
 
-      <!-- 🆕 全站通用 VS 样式 -->
       <div class="vs universal-vs">VS</div>
 
       <div class="player player--right">
@@ -140,39 +128,16 @@ const getWidth = (valA, valB) => {
         </div>
       </section>
 
-      <!-- 常规数据对比 -->
-      <section v-else class="stats" key="stats">
-        <div v-for="(s, index) in currentStatDefs" :key="s.key" class="stat">
-          <div class="stat__side stat__side--left">
-            <span class="stat__value" :style="s.key === 'gd15' && playerA.stats[s.key] > 0 ? { color: '#10b981' } : {}">
-              {{ playerA.stats[s.key] > 0 && s.key === 'gd15' ? '+' : '' }}{{ playerA.stats[s.key] }}{{ s.suffix || '' }}
-            </span>
-            <div class="stat__track">
-              <div class="stat__bar stat__bar--left"
-                :style="{ width: (animateBars ? getWidth(playerA.stats[s.key], playerB.stats[s.key]).left : 0) + '%', transitionDelay: `${index * 0.15}s` }">
-              </div>
-            </div>
-          </div>
-          <span class="stat__label">{{ s.label }}</span>
-          <div class="stat__side stat__side--right">
-            <div class="stat__track">
-              <div class="stat__bar stat__bar--right"
-                :style="{ width: (animateBars ? getWidth(playerA.stats[s.key], playerB.stats[s.key]).right : 0) + '%', transitionDelay: `${index * 0.15}s` }">
-              </div>
-            </div>
-            <span class="stat__value" :style="s.key === 'gd15' && playerB.stats[s.key] > 0 ? { color: '#10b981' } : {}">
-              {{ playerB.stats[s.key] > 0 && s.key === 'gd15' ? '+' : '' }}{{ playerB.stats[s.key] }}{{ s.suffix || '' }}
-            </span>
-          </div>
-        </div>
-      </section>
+            <!-- 🆕 常规数据对比：改用类名 -->
+      <div v-else key="stats" class="stats-wrapper">
+        <StatList :defs="currentStatDefs" :dataA="playerA.stats" :dataB="playerB.stats" :animateBars="animateBars" />
+      </div>
 
     </transition>
   </div>
 </template>
 
 <style scoped>
-/* ================= 基础画板 ================= */
 .board {
   width: 100%;
   max-width: 850px;
@@ -189,15 +154,14 @@ const getWidth = (valA, valB) => {
   overflow: hidden;
 }
 
-/* ================= 🆕 全屏模式：通用基础设置 ================= */
 .board.board--fullscreen {
   width: 100vw;
   height: 100vh;
   max-width: 100vw;
   max-height: 100vh;
-  border-radius: 0; 
-  border: none; 
-  padding: 6vh 8vw; 
+  border-radius: 0;
+  border: none;
+  padding: 6vh 8vw;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -208,7 +172,6 @@ const getWidth = (valA, valB) => {
   margin-bottom: 0;
 }
 
-/* ================= 🆕 全屏模式：常规数据对比 ================= */
 .board--fullscreen .versus {
   flex: 4;
   align-items: center;
@@ -221,110 +184,130 @@ const getWidth = (valA, valB) => {
   height: 150px;
   margin-bottom: 20px;
 }
-.board--fullscreen .player__initial { font-size: 60px; }
-.board--fullscreen .player__name { font-size: 42px; }
-.board--fullscreen .player__meta { font-size: 16px; margin-top: 10px; }
-.board--fullscreen .player__champs { margin-top: 24px; gap: 12px; }
-.board--fullscreen .champ { width: 56px; height: 56px; border-radius: 12px; font-size: 20px; }
-.board--fullscreen .champs-trigger { font-size: 16px; margin-top: 24px; padding: 8px 20px; }
 
-.board--fullscreen .stats {
+.board--fullscreen .player__initial {
+  font-size: 60px;
+}
+
+.board--fullscreen .player__name {
+  font-size: 42px;
+}
+
+.board--fullscreen .player__meta {
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.board--fullscreen .player__champs {
+  margin-top: 24px;
+  gap: 12px;
+}
+
+.board--fullscreen .champ {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  font-size: 20px;
+}
+
+.board--fullscreen .champs-trigger {
+  font-size: 16px;
+  margin-top: 24px;
+  padding: 8px 20px;
+}
+
+/* 🆕 全屏下，包裹层接管 flex: 6，撑满剩余空间 */
+.board--fullscreen .stats-wrapper {
   flex: 6;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly; 
   margin-top: 20px;
-  min-height: auto; 
 }
 
-.board--fullscreen .stat {
-  grid-template-columns: 1fr 200px 1fr; 
-  padding: 0; 
+/* 🆕 让 StatList 内部的 stats 占满整个包裹层 */
+.board--fullscreen :deep(.stats) { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: space-evenly; 
+  width: 100%;
+  min-height: auto; /* 取消组件里默认的 380px 限制 */
 }
+.board--fullscreen :deep(.stat) { grid-template-columns: 1fr 200px 1fr; padding: 0; }
+.board--fullscreen :deep(.stat__value) { font-size: 32px; width: 100px; }
+.board--fullscreen :deep(.stat__label) { font-size: 20px; font-weight: 700; letter-spacing: 0.1em; }
+.board--fullscreen :deep(.stat__track) { height: 16px; }
 
-.board--fullscreen .stat__value {
-  font-size: 32px;
-  width: 100px;
-}
-.board--fullscreen .stat__label {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-.board--fullscreen .stat__track {
-  height: 16px; 
-}
-
-/* ================= 🆕 全屏模式：英雄池数据视图 ================= */
+/* 英雄池全屏样式 */
 .board--fullscreen .champion-pool-view {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly; /* 让头部和网格均匀分布 */
+  justify-content: space-evenly;
 }
 
-/* 放大头部头像和标题 */
 .board--fullscreen .pool-avatar-wrap {
   width: 120px;
   height: 120px;
   margin-bottom: 16px;
 }
+
 .board--fullscreen .pool-title {
   font-size: 28px;
 }
 
-/* 容器垂直居中 */
 .board--fullscreen .pool-grid-wrapper {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
   padding-right: 8px;
   display: flex;
-  flex-direction: column; 
-  justify-content: center; 
+  flex-direction: column;
+  justify-content: center;
 }
 
-/* 4列网格，宽间距 */
 .board--fullscreen .pool-grid {
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   width: 100%;
-  margin: 0; 
+  margin: 0;
 }
 
-/* 放大卡片整体 */
 .board--fullscreen .pool-card {
   padding: 24px 32px;
   gap: 20px;
   border-radius: 16px;
 }
 
-/* 放大内部元素 */
 .board--fullscreen .row-icon {
   width: 56px;
   height: 56px;
 }
+
 .board--fullscreen .card-content {
-  grid-template-columns: 80px 1fr 60px; 
+  grid-template-columns: 80px 1fr 60px;
   column-gap: 20px;
   row-gap: 8px;
 }
+
 .board--fullscreen .row-name {
   font-size: 20px;
 }
+
 .board--fullscreen .row-games {
   font-size: 14px;
 }
+
 .board--fullscreen .wr-bar-bg {
-  height: 10px; 
+  height: 10px;
 }
+
 .board--fullscreen .wr-text {
   font-size: 16px;
 }
-/* ================= 全屏样式结束 ================= */
 
-
-/* ================= 导航 ================= */
+/* 普通模式基础样式 */
 .board__top {
   flex-shrink: 0;
   display: flex;
@@ -353,7 +336,6 @@ const getWidth = (valA, valB) => {
   background: #e23a4e;
 }
 
-/* ================= 选手对比头部 (普通模式) ================= */
 .versus {
   display: grid;
   grid-template-columns: 1fr 150px 1fr;
@@ -461,7 +443,6 @@ const getWidth = (valA, valB) => {
   color: #7b8ca6;
 }
 
-/* 🆕 普通模式下的红字 VS */
 .vs {
   display: inline-block;
   font-size: 56px;
@@ -476,13 +457,12 @@ const getWidth = (valA, valB) => {
   margin-top: 40px;
 }
 
-/* 🆕 全屏模式：强制去掉局部红色，激活全局的银白渐变 */
 .board--fullscreen .vs {
   font-size: 110px;
   margin-top: 0;
-  color: transparent !important; 
-  text-shadow: none !important; 
-  transform: none !important; 
+  color: transparent !important;
+  text-shadow: none !important;
+  transform: none !important;
 }
 
 .champs-trigger {
@@ -503,7 +483,7 @@ const getWidth = (valA, valB) => {
   color: #fff;
 }
 
-/* ================= 英雄池视图 (普通模式) ================= */
+/* 英雄池普通模式 */
 .champion-pool-view {
   display: flex;
   flex-direction: column;
@@ -597,7 +577,6 @@ const getWidth = (valA, valB) => {
   width: 100%;
 }
 
-/* 单个卡片 */
 .pool-card {
   display: flex;
   align-items: center;
@@ -711,88 +690,8 @@ const getWidth = (valA, valB) => {
   text-align: right;
 }
 
-/* 全屏下隐藏KDA后的列宽 */
 .board--fullscreen .card-content {
   grid-template-columns: 50px 1fr 42px;
-}
-
-/* ================= 常规对比数据条 ================= */
-.stats {
-  display: flex;
-  flex-direction: column;
-  min-height: 380px;
-  justify-content: center;
-}
-
-.stat {
-  display: grid;
-  grid-template-columns: 1fr 140px 1fr;
-  align-items: center;
-  padding: 10px 0;
-}
-
-.stat__side {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.stat__side--left {
-  justify-content: flex-end;
-}
-
-.stat__side--right {
-  justify-content: flex-start;
-}
-
-.stat__value {
-  width: 80px;
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.stat__side--left .stat__value {
-  text-align: right;
-  color: #ff5567;
-}
-
-.stat__side--right .stat__value {
-  text-align: left;
-  color: #8fa9ce;
-}
-
-.stat__track {
-  flex: 1;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 99px;
-  overflow: hidden;
-  display: flex;
-}
-
-.stat__side--left .stat__track {
-  justify-content: flex-end;
-}
-
-.stat__bar {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 1.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.stat__bar--left {
-  background: linear-gradient(90deg, #8e1523, #e23a4e);
-}
-
-.stat__bar--right {
-  background: linear-gradient(90deg, #7a95bb, #3e5069);
-}
-
-.stat__label {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: #737c8e;
 }
 
 /* 动画 */

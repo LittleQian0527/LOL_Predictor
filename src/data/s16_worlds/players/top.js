@@ -85,7 +85,7 @@ export const topPlayers = {
       { name: '奎桑提', icon: '/images/champions/KSante.png', games: 1, winRate: 100, kda: 4.7 },
       { name: '克烈', icon: '/images/champions/Kled.png', games: 1, winRate: 100, kda: 4.5 },
       { name: '奥恩', icon: '/images/champions/Ornn.png', games: 1, winRate: 100, kda: '-' },
-      { name: 'Zaahan', icon: '/images/champions/Zaahan.png', games: 1, winRate: 0, kda: 0.8 },
+      { name: '亚恒', icon: '/images/champions/Zaahen.png', games: 1, winRate: 0, kda: 0.8 },
       { name: '杰斯', icon: '/images/champions/Jayce.png', games: 1, winRate: 100, kda: '-' }
     ],
     stats: {

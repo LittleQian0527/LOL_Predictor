@@ -152,4 +152,46 @@ export const coachesDb = {
       { year: 2026, result: '待定' } // S16世界赛正在进行中
     ]
   },
+  cvmax: {
+    id: 'cvmax',
+    name: 'cvMax',
+    team: 'DK',
+    avatar: '/images/coaches/cvmax.png',
+    scale: 1.1,
+    careerTeams: ['GRF', 'DRX', 'KDF', 'JDG', 'DK'],
+    worldsCount: 2,
+    worldsRole: '主教练',
+    worldsHistory: [
+      { year: 'S10', result: '八强' },
+      { year: 'S16', result: '待定' }
+    ],
+    trophies: [
+      '2026 EWC 冠军',
+      '2026 LCK 年度最佳教练',
+      '2018 KeSPA 杯冠军'
+    ]
+  },
+  reapered: {
+    id: 'reapered',
+    name: 'Reapered',
+    team: 'KC',
+    avatar: '/images/coaches/reapered.png',
+    scale: 1.0,
+    careerTeams: ['C9', '100T', 'KC'],
+    worldsCount: 4, // 执教C9期间多次进入世界赛
+    worldsRole: '主教练',
+    worldsHistory: [
+      { year: 'S7', result: '小组赛' },
+      { year: 'S8', result: '四强' },
+      { year: 'S9', result: '小组赛' },
+      { year: 'S10', result: '八强' }
+    ],
+    trophies: [
+      '2025 LEC 冬季赛冠军', // 以KC教练身份获得
+      'LCS 2025 第二赛段冠军',
+      'LCS 2020 春季赛冠军',
+      'LCS 2019 夏季赛冠军',
+      'LCS 2018 夏季赛冠军'
+    ]
+  },
 }
